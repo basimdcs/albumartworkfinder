@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import Link from "next/link"
@@ -47,6 +47,42 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Album Artwork Finder',
+    startupImage: [
+      '/apple-touch-startup-image-768x1004.png',
+      '/apple-touch-startup-image-1536x2008.png',
+    ],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'Album Artwork Finder',
+    'application-name': 'Album Artwork Finder',
+    'msapplication-TileColor': '#3b82f6',
+    'msapplication-config': '/browserconfig.xml',
+    'theme-color': '#3b82f6',
+  },
+}
+
+// Enhanced viewport configuration for mobile
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#3b82f6' },
+    { media: '(prefers-color-scheme: dark)', color: '#1d4ed8' },
+  ],
 }
 
 // Enable static generation with 24-hour revalidation
@@ -59,7 +95,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="preconnect" href="https://itunes.apple.com" />
+        <link rel="dns-prefetch" href="https://itunes.apple.com" />
+      </head>
+      <body className={`${inter.className} safe-area-padding`}>
         <header className="border-b bg-white shadow-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between gap-4">
@@ -67,8 +110,8 @@ export default function RootLayout({
                 AlbumArtworkFinder
               </Link>
               
-              {/* Global Search - Hidden on homepage */}
-              <div className="flex-1 max-w-md mx-4 hidden sm:block">
+              {/* Global Search - Only show on non-homepage */}
+              <div className="flex-1 max-w-md mx-4">
                 <GlobalSearch />
               </div>
               
@@ -82,16 +125,11 @@ export default function RootLayout({
               </nav>
               
               {/* Mobile menu button */}
-              <button className="md:hidden p-2 text-gray-600 hover:text-primary" aria-label="Menu">
+              <button className="md:hidden p-2 text-gray-600 hover:text-primary min-h-[44px] min-w-[44px] touch-target" aria-label="Menu">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-            </div>
-            
-            {/* Mobile Search Bar */}
-            <div className="mt-3 sm:hidden">
-              <GlobalSearch />
             </div>
           </div>
         </header>

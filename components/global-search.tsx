@@ -29,11 +29,14 @@ export default function GlobalSearch() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search albums, artists, songs..."
-          className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 pr-10 text-sm focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 pr-10 text-sm focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[44px] touch-manipulation"
+          autoComplete="off"
+          inputMode="search"
+          enterKeyHint="search"
         />
         <button
           type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Search"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

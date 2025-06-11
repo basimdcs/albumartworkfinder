@@ -1,28 +1,44 @@
-'use client'
+import { Metadata } from 'next'
+import { Suspense } from 'react'
+import SearchResults from './search-results'
 
-import React, { Suspense } from 'react'
-import SearchContent from './search-content'
+interface SearchPageProps {
+  searchParams: Promise<{ q?: string }>
+}
 
-export default function SearchPage() {
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+  const { q } = await searchParams
+  
+  if (!q) {
+    return {
+      title: 'Search Album Artwork | AlbumArtworkFinder',
+      description: 'Search for album artwork, covers, and music from millions of artists. Find high-quality album art from the iTunes catalog.',
+    }
+  }
+
+  return {
+    title: `Search Results for "${q}" | AlbumArtworkFinder`,
+    description: `Find album artwork for "${q}". Search results from millions of albums and artists in the iTunes catalog.`,
+  }
+}
+
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const { q } = await searchParams
+  
   return (
-    <Suspense fallback={
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
-          <div className="h-6 bg-gray-200 rounded w-48 mb-8"></div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <div className="aspect-square bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {q ? `Search Results for "${q}"` : 'Search Album Artwork'}
+        </h1>
+        <p className="text-gray-600">
+          {q ? `Finding album artwork for "${q}"` : 'Enter a search term to find album artwork'}
+        </p>
       </div>
-    }>
-      <SearchContent />
-    </Suspense>
+      
+      <Suspense fallback={<div className="text-center py-8">Loading search results...</div>}>
+        <SearchResults query={q} />
+      </Suspense>
+    </div>
   )
 }
