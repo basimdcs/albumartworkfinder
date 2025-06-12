@@ -524,12 +524,13 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
   }
   
   return getCachedData(`albums_${query}`, async () => {
-    const searchUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=album&limit=50`
+    // Use our Vercel proxy instead of direct iTunes API
+    const proxyUrl = `/api/itunes-proxy?term=${encodeURIComponent(query)}&media=music&entity=album&limit=50`
     
-    console.log('🔍 iTunes Album Search Started:', {
+    console.log('🔍 iTunes Album Search Started (via proxy):', {
       query,
       encodedQuery: encodeURIComponent(query),
-      url: searchUrl,
+      proxyUrl,
       timestamp: new Date().toISOString(),
       userAgent: navigator?.userAgent || 'Unknown',
       location: window?.location?.href || 'Unknown',
@@ -540,18 +541,17 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
     const startTime = performance.now()
     
     try {
-      response = await fetch(searchUrl, {
+      response = await fetch(proxyUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-        },
-        mode: 'cors'
+        }
       })
     } catch (fetchError) {
       const endTime = performance.now()
       const errorDetails = {
         query,
-        url: searchUrl,
+        proxyUrl,
         error: fetchError,
         errorMessage: fetchError instanceof Error ? fetchError.message : 'Unknown fetch error',
         errorName: fetchError instanceof Error ? fetchError.name : 'Unknown',
@@ -566,8 +566,8 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
           } : 'Not available'
         }
       }
-      console.error('❌ Network error during iTunes API fetch:', errorDetails)
-      throw new Error(`Network error accessing iTunes API: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}. Duration: ${Math.round(endTime - startTime)}ms`)
+      console.error('❌ Network error during iTunes Proxy fetch:', errorDetails)
+      throw new Error(`Network error accessing iTunes Proxy: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}. Duration: ${Math.round(endTime - startTime)}ms`)
     }
     
     const endTime = performance.now()
@@ -583,7 +583,7 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
       
       const errorDetails = {
         query,
-        url: searchUrl,
+        proxyUrl,
         status: response.status,
         statusText: response.statusText,
         responseBody: responseText,
@@ -591,8 +591,8 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
         headers: Object.fromEntries(response.headers.entries()),
         timestamp: new Date().toISOString()
       }
-      console.error('❌ iTunes API HTTP error:', errorDetails)
-      throw new Error(`iTunes API HTTP ${response.status} error: ${response.statusText}. Response: ${responseText}. Duration: ${requestDuration}ms`)
+      console.error('❌ iTunes Proxy HTTP error:', errorDetails)
+      throw new Error(`iTunes Proxy HTTP ${response.status} error: ${response.statusText}. Response: ${responseText}. Duration: ${requestDuration}ms`)
     }
     
     let data: iTunesSearchResult
@@ -601,16 +601,16 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
     } catch (parseError) {
       const errorDetails = {
         query,
-        url: searchUrl,
+        proxyUrl,
         error: parseError,
         duration: `${requestDuration}ms`,
         timestamp: new Date().toISOString()
       }
-      console.error('❌ Failed to parse iTunes API JSON response:', errorDetails)
-      throw new Error(`Failed to parse iTunes API JSON response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}. Duration: ${requestDuration}ms`)
+      console.error('❌ Failed to parse iTunes Proxy JSON response:', errorDetails)
+      throw new Error(`Failed to parse iTunes Proxy JSON response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}. Duration: ${requestDuration}ms`)
     }
     
-    console.log('📊 iTunes API Response Received:', {
+    console.log('📊 iTunes Proxy Response Received:', {
       query,
       status: response.status,
       duration: `${requestDuration}ms`,
@@ -621,8 +621,8 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
     })
     
     if (!data.results) {
-      const error = new Error(`iTunes API returned no results array for "${query}"`)
-      console.error('❌ iTunes API structure error:', {
+      const error = new Error(`iTunes Proxy returned no results array for "${query}"`)
+      console.error('❌ iTunes Proxy structure error:', {
         query,
         data,
         error: error.message,
@@ -699,7 +699,7 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
       .filter((album): album is Album => album !== null)
       .slice(0, 50)
     
-    console.log('✅ iTunes Album Search Completed:', {
+    console.log('✅ iTunes Album Search Completed (via proxy):', {
       query,
       totalDuration: `${requestDuration}ms`,
       inputResults: data.results.length,
@@ -883,12 +883,13 @@ export const searchSongs = async (query: string): Promise<Album[]> => {
   }
   
   return getCachedData(`songs_${query}`, async () => {
-    const searchUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=50`
+    // Use our Vercel proxy instead of direct iTunes API
+    const proxyUrl = `/api/itunes-proxy?term=${encodeURIComponent(query)}&media=music&entity=song&limit=50`
     
-    console.log('🔍 iTunes Songs Search Started:', {
+    console.log('🔍 iTunes Songs Search Started (via proxy):', {
       query,
       encodedQuery: encodeURIComponent(query),
-      url: searchUrl,
+      proxyUrl,
       timestamp: new Date().toISOString(),
       userAgent: navigator?.userAgent || 'Unknown',
       location: window?.location?.href || 'Unknown',
@@ -899,26 +900,25 @@ export const searchSongs = async (query: string): Promise<Album[]> => {
     const startTime = performance.now()
     
     try {
-      response = await fetch(searchUrl, {
+      response = await fetch(proxyUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-        },
-        mode: 'cors'
+        }
       })
     } catch (fetchError) {
       const endTime = performance.now()
       const errorDetails = {
         query,
-        url: searchUrl,
+        proxyUrl,
         error: fetchError,
         errorMessage: fetchError instanceof Error ? fetchError.message : 'Unknown fetch error',
         errorName: fetchError instanceof Error ? fetchError.name : 'Unknown',
         duration: `${Math.round(endTime - startTime)}ms`,
         timestamp: new Date().toISOString()
       }
-      console.error('❌ Network error during iTunes Songs API fetch:', errorDetails)
-      throw new Error(`Network error accessing iTunes Songs API: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}. Duration: ${Math.round(endTime - startTime)}ms`)
+      console.error('❌ Network error during iTunes Songs Proxy fetch:', errorDetails)
+      throw new Error(`Network error accessing iTunes Songs Proxy: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}. Duration: ${Math.round(endTime - startTime)}ms`)
     }
     
     const endTime = performance.now()
@@ -934,7 +934,7 @@ export const searchSongs = async (query: string): Promise<Album[]> => {
       
       const errorDetails = {
         query,
-        url: searchUrl,
+        proxyUrl,
         status: response.status,
         statusText: response.statusText,
         responseBody: responseText,
@@ -942,8 +942,8 @@ export const searchSongs = async (query: string): Promise<Album[]> => {
         headers: Object.fromEntries(response.headers.entries()),
         timestamp: new Date().toISOString()
       }
-      console.error('❌ iTunes Songs API HTTP error:', errorDetails)
-      throw new Error(`iTunes Songs API HTTP ${response.status} error: ${response.statusText}. Response: ${responseText}. Duration: ${requestDuration}ms`)
+      console.error('❌ iTunes Songs Proxy HTTP error:', errorDetails)
+      throw new Error(`iTunes Songs Proxy HTTP ${response.status} error: ${response.statusText}. Response: ${responseText}. Duration: ${requestDuration}ms`)
     }
     
     let data: iTunesSearchResult
@@ -952,16 +952,16 @@ export const searchSongs = async (query: string): Promise<Album[]> => {
     } catch (parseError) {
       const errorDetails = {
         query,
-        url: searchUrl,
+        proxyUrl,
         error: parseError,
         duration: `${requestDuration}ms`,
         timestamp: new Date().toISOString()
       }
-      console.error('❌ Failed to parse iTunes Songs API JSON response:', errorDetails)
-      throw new Error(`Failed to parse iTunes Songs API JSON response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}. Duration: ${requestDuration}ms`)
+      console.error('❌ Failed to parse iTunes Songs Proxy JSON response:', errorDetails)
+      throw new Error(`Failed to parse iTunes Songs Proxy JSON response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}. Duration: ${requestDuration}ms`)
     }
     
-    console.log('📊 iTunes Songs API Response Received:', {
+    console.log('📊 iTunes Songs Proxy Response Received:', {
       query,
       status: response.status,
       duration: `${requestDuration}ms`,
@@ -971,8 +971,8 @@ export const searchSongs = async (query: string): Promise<Album[]> => {
     })
     
     if (!data.results) {
-      const error = new Error(`iTunes Songs API returned no results array for "${query}"`)
-      console.error('❌ iTunes Songs API structure error:', {
+      const error = new Error(`iTunes Songs Proxy returned no results array for "${query}"`)
+      console.error('❌ iTunes Songs Proxy structure error:', {
         query,
         data,
         error: error.message,
@@ -1049,7 +1049,7 @@ export const searchSongs = async (query: string): Promise<Album[]> => {
       .filter((song): song is Album => song !== null)
       .slice(0, 50)
     
-    console.log('✅ iTunes Songs Search Completed:', {
+    console.log('✅ iTunes Songs Search Completed (via proxy):', {
       query,
       totalDuration: `${requestDuration}ms`,
       inputResults: data.results.length,
