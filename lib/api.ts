@@ -498,7 +498,7 @@ export const getPopularArtists = async (): Promise<Artist[]> => {
   })
 }
 
-// Search for albums - client-side only with comprehensive error reporting
+// Search for albums only - simplified and optimized
 export const searchAlbums = async (query: string): Promise<Album[]> => {
   if (!query.trim()) {
     const error = new Error('Empty search query provided')
@@ -602,87 +602,75 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
       const errorDetails = {
         query,
         proxyUrl,
-        error: parseError,
+        parseError,
         duration: `${requestDuration}ms`,
         timestamp: new Date().toISOString()
       }
       console.error('❌ Failed to parse iTunes Proxy JSON response:', errorDetails)
-      throw new Error(`Failed to parse iTunes Proxy JSON response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}. Duration: ${requestDuration}ms`)
+      throw new Error(`Failed to parse iTunes Proxy JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}. Duration: ${requestDuration}ms`)
     }
     
-    console.log('📊 iTunes Proxy Response Received:', {
+    if (!data || typeof data.resultCount !== 'number' || !Array.isArray(data.results)) {
+      const errorDetails = {
+        query,
+        proxyUrl,
+        invalidData: data,
+        duration: `${requestDuration}ms`,
+        timestamp: new Date().toISOString()
+      }
+      console.error('❌ Invalid iTunes Proxy response structure:', errorDetails)
+      throw new Error(`Invalid iTunes Proxy response structure. Expected {resultCount: number, results: array}, got: ${JSON.stringify(data)}. Duration: ${requestDuration}ms`)
+    }
+    
+    console.log('📊 iTunes Proxy Response Analysis:', {
       query,
-      status: response.status,
+      totalResults: data.resultCount,
+      actualResults: data.results.length,
       duration: `${requestDuration}ms`,
-      resultCount: data.resultCount,
-      actualResults: data.results?.length || 0,
-      timestamp: new Date().toISOString(),
-      responseSize: JSON.stringify(data).length + ' characters'
+      timestamp: new Date().toISOString()
     })
     
-    if (!data.results) {
-      const error = new Error(`iTunes Proxy returned no results array for "${query}"`)
-      console.error('❌ iTunes Proxy structure error:', {
-        query,
-        data,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      })
-      throw error
-    }
-    
     if (data.results.length === 0) {
-      const error = new Error(`No albums found for "${query}" in iTunes API`)
-      console.error('⚠️ No results found:', {
+      console.log('⚠️ No results from iTunes Proxy:', {
         query,
         resultCount: data.resultCount,
         timestamp: new Date().toISOString()
       })
-      throw error
+      return []
     }
     
-    const validCollections = data.results.filter(item => {
-      const isValid = item && item.wrapperType === 'collection' && item.collectionName && item.artistName
-      if (!isValid) {
-        console.log('🔍 Filtered out invalid result:', {
-          wrapperType: item?.wrapperType,
-          collectionName: item?.collectionName,
-          artistName: item?.artistName,
-          hasItem: !!item
-        })
-      }
-      return isValid
-    })
+    // Filter for albums only
+    const validAlbums = data.results.filter(item => 
+      item.wrapperType === 'collection' && 
+      item.collectionName && 
+      item.artistName &&
+      item.artworkUrl100
+    )
     
-    console.log('📋 iTunes Results Filtering:', {
+    console.log('🔍 Album Filtering Results:', {
       query,
-      totalResults: data.results.length,
-      validCollections: validCollections.length,
-      filteredOut: data.results.length - validCollections.length,
+      inputResults: data.results.length,
+      validAlbums: validAlbums.length,
+      filterSuccessRate: `${Math.round((validAlbums.length / data.results.length) * 100)}%`,
       timestamp: new Date().toISOString()
     })
     
-    if (validCollections.length === 0) {
-      const error = new Error(`No valid album collections found for "${query}". All ${data.results.length} results were invalid or filtered out.`)
-      console.error('❌ No valid collections after filtering:', {
+    if (validAlbums.length === 0) {
+      const error = new Error(`No valid albums found for "${query}". Found ${data.results.length} iTunes results but none were valid albums.`)
+      console.error('❌ No valid albums after filtering:', {
         query,
         totalResults: data.results.length,
-        sampleResults: data.results.slice(0, 3).map(item => ({
-          wrapperType: item?.wrapperType,
-          collectionName: item?.collectionName,
-          artistName: item?.artistName
-        })),
         timestamp: new Date().toISOString()
       })
       throw error
     }
     
-    const albums = validCollections
+    const albums = validAlbums
       .map((item, index) => {
         try {
           return convertToAlbum(item, false)
         } catch (conversionError) {
-          console.error('❌ Failed to convert iTunes item to album:', {
+          console.error('❌ Failed to convert iTunes album item:', {
             query,
             index,
             item: {
@@ -703,22 +691,17 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
       query,
       totalDuration: `${requestDuration}ms`,
       inputResults: data.results.length,
-      validCollections: validCollections.length,
+      validAlbums: validAlbums.length,
       finalAlbums: albums.length,
-      conversionSuccessRate: `${Math.round((albums.length / validCollections.length) * 100)}%`,
-      timestamp: new Date().toISOString(),
-      sampleAlbums: albums.slice(0, 3).map(album => ({
-        title: album.title,
-        artist: album.artist,
-        id: album.id
-      }))
+      conversionSuccessRate: `${Math.round((albums.length / validAlbums.length) * 100)}%`,
+      timestamp: new Date().toISOString()
     })
     
     if (albums.length === 0) {
-      const error = new Error(`Failed to convert any valid albums for "${query}". All ${validCollections.length} valid iTunes results failed during album conversion.`)
+      const error = new Error(`Failed to convert any valid albums for "${query}". All ${validAlbums.length} valid iTunes results failed during conversion.`)
       console.error('❌ No albums after conversion:', {
         query,
-        validCollections: validCollections.length,
+        validAlbums: validAlbums.length,
         timestamp: new Date().toISOString()
       })
       throw error
@@ -857,369 +840,5 @@ export const getRelatedAlbums = async (albumId: string): Promise<Album[]> => {
   }
 }
 
-// Search for songs - client-side only with comprehensive error reporting
-export const searchSongs = async (query: string): Promise<Album[]> => {
-  if (!query.trim()) {
-    const error = new Error('Empty search query provided')
-    console.error('❌ SearchSongs Error:', {
-      error: error.message,
-      query,
-      timestamp: new Date().toISOString()
-    })
-    throw error
-  }
-  
-  // Block server-side calls completely
-  if (typeof window === 'undefined') {
-    const error = new Error('Server-side iTunes API calls are blocked to prevent rate limiting and CORS issues')
-    console.error('🚫 Server-side search attempt blocked:', {
-      query,
-      error: error.message,
-      location: 'searchSongs',
-      timestamp: new Date().toISOString(),
-      stack: new Error().stack
-    })
-    throw error
-  }
-  
-  return getCachedData(`songs_${query}`, async () => {
-    // Use our Vercel proxy instead of direct iTunes API
-    const proxyUrl = `/api/itunes-proxy?term=${encodeURIComponent(query)}&media=music&entity=song&limit=50`
-    
-    console.log('🔍 iTunes Songs Search Started (via proxy):', {
-      query,
-      encodedQuery: encodeURIComponent(query),
-      proxyUrl,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator?.userAgent || 'Unknown',
-      location: window?.location?.href || 'Unknown',
-      online: navigator?.onLine || 'Unknown'
-    })
-    
-    let response: Response
-    const startTime = performance.now()
-    
-    try {
-      response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        }
-      })
-    } catch (fetchError) {
-      const endTime = performance.now()
-      const errorDetails = {
-        query,
-        proxyUrl,
-        error: fetchError,
-        errorMessage: fetchError instanceof Error ? fetchError.message : 'Unknown fetch error',
-        errorName: fetchError instanceof Error ? fetchError.name : 'Unknown',
-        duration: `${Math.round(endTime - startTime)}ms`,
-        timestamp: new Date().toISOString()
-      }
-      console.error('❌ Network error during iTunes Songs Proxy fetch:', errorDetails)
-      throw new Error(`Network error accessing iTunes Songs Proxy: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}. Duration: ${Math.round(endTime - startTime)}ms`)
-    }
-    
-    const endTime = performance.now()
-    const requestDuration = Math.round(endTime - startTime)
-    
-    if (!response.ok) {
-      let responseText = 'Could not read response body'
-      try {
-        responseText = await response.text()
-      } catch (e) {
-        console.error('Failed to read error response body:', e)
-      }
-      
-      const errorDetails = {
-        query,
-        proxyUrl,
-        status: response.status,
-        statusText: response.statusText,
-        responseBody: responseText,
-        duration: `${requestDuration}ms`,
-        headers: Object.fromEntries(response.headers.entries()),
-        timestamp: new Date().toISOString()
-      }
-      console.error('❌ iTunes Songs Proxy HTTP error:', errorDetails)
-      throw new Error(`iTunes Songs Proxy HTTP ${response.status} error: ${response.statusText}. Response: ${responseText}. Duration: ${requestDuration}ms`)
-    }
-    
-    let data: iTunesSearchResult
-    try {
-      data = await response.json()
-    } catch (parseError) {
-      const errorDetails = {
-        query,
-        proxyUrl,
-        error: parseError,
-        duration: `${requestDuration}ms`,
-        timestamp: new Date().toISOString()
-      }
-      console.error('❌ Failed to parse iTunes Songs Proxy JSON response:', errorDetails)
-      throw new Error(`Failed to parse iTunes Songs Proxy JSON response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}. Duration: ${requestDuration}ms`)
-    }
-    
-    console.log('📊 iTunes Songs Proxy Response Received:', {
-      query,
-      status: response.status,
-      duration: `${requestDuration}ms`,
-      resultCount: data.resultCount,
-      actualResults: data.results?.length || 0,
-      timestamp: new Date().toISOString()
-    })
-    
-    if (!data.results) {
-      const error = new Error(`iTunes Songs Proxy returned no results array for "${query}"`)
-      console.error('❌ iTunes Songs Proxy structure error:', {
-        query,
-        data,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      })
-      throw error
-    }
-    
-    if (data.results.length === 0) {
-      const error = new Error(`No songs found for "${query}" in iTunes API`)
-      console.error('⚠️ No songs found:', {
-        query,
-        resultCount: data.resultCount,
-        timestamp: new Date().toISOString()
-      })
-      throw error
-    }
-    
-    const validTracks = data.results.filter(item => {
-      const isValid = item && item.wrapperType === 'track' && item.trackName && item.artistName
-      if (!isValid) {
-        console.log('🔍 Filtered out invalid song result:', {
-          wrapperType: item?.wrapperType,
-          trackName: item?.trackName,
-          artistName: item?.artistName,
-          hasItem: !!item
-        })
-      }
-      return isValid
-    })
-    
-    console.log('📋 iTunes Songs Results Filtering:', {
-      query,
-      totalResults: data.results.length,
-      validTracks: validTracks.length,
-      filteredOut: data.results.length - validTracks.length,
-      timestamp: new Date().toISOString()
-    })
-    
-    if (validTracks.length === 0) {
-      const error = new Error(`No valid song tracks found for "${query}". All ${data.results.length} results were invalid or filtered out.`)
-      console.error('❌ No valid tracks after filtering:', {
-        query,
-        totalResults: data.results.length,
-        sampleResults: data.results.slice(0, 3).map(item => ({
-          wrapperType: item?.wrapperType,
-          trackName: item?.trackName,
-          artistName: item?.artistName
-        })),
-        timestamp: new Date().toISOString()
-      })
-      throw error
-    }
-    
-    const songs = validTracks
-      .map((item, index) => {
-        try {
-          return convertToAlbum(item, false)
-        } catch (conversionError) {
-          console.error('❌ Failed to convert iTunes song item to album:', {
-            query,
-            index,
-            item: {
-              trackName: item.trackName,
-              artistName: item.artistName,
-              trackId: item.trackId
-            },
-            error: conversionError,
-            timestamp: new Date().toISOString()
-          })
-          return null
-        }
-      })
-      .filter((song): song is Album => song !== null)
-      .slice(0, 50)
-    
-    console.log('✅ iTunes Songs Search Completed (via proxy):', {
-      query,
-      totalDuration: `${requestDuration}ms`,
-      inputResults: data.results.length,
-      validTracks: validTracks.length,
-      finalSongs: songs.length,
-      conversionSuccessRate: `${Math.round((songs.length / validTracks.length) * 100)}%`,
-      timestamp: new Date().toISOString()
-    })
-    
-    if (songs.length === 0) {
-      const error = new Error(`Failed to convert any valid songs for "${query}". All ${validTracks.length} valid iTunes results failed during conversion.`)
-      console.error('❌ No songs after conversion:', {
-        query,
-        validTracks: validTracks.length,
-        timestamp: new Date().toISOString()
-      })
-      throw error
-    }
-    
-    return songs
-  })
-}
-
-// Search all (albums and songs combined) - with better error handling
-export const searchAll = async (query: string): Promise<Album[]> => {
-  if (!query.trim()) {
-    const error = new Error('Empty search query provided')
-    console.error('❌ SearchAll Error:', {
-      error: error.message,
-      query,
-      timestamp: new Date().toISOString()
-    })
-    throw error
-  }
-  
-  console.log('🔍 searchAll called for:', {
-    query,
-    timestamp: new Date().toISOString(),
-    userAgent: typeof window !== 'undefined' ? navigator?.userAgent : 'Server-side',
-    online: typeof window !== 'undefined' ? navigator?.onLine : 'Unknown'
-  })
-  
-  try {
-    // Use Promise.allSettled to handle partial failures gracefully
-    const searchPromises = [
-      searchAlbums(query).catch(error => {
-        console.error('❌ searchAlbums failed in searchAll:', {
-          query,
-          error,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          errorStack: error instanceof Error ? error.stack : 'No stack trace',
-          timestamp: new Date().toISOString()
-        })
-        throw error
-      }),
-      searchSongs(query).catch(error => {
-        console.error('❌ searchSongs failed in searchAll:', {
-          query,
-          error,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          errorStack: error instanceof Error ? error.stack : 'No stack trace',
-          timestamp: new Date().toISOString()
-        })
-        throw error
-      })
-    ]
-    
-    const [albumsResult, songsResult] = await Promise.allSettled(searchPromises)
-    
-    let albums: Album[] = []
-    let songs: Album[] = []
-    let albumsError: any = null
-    let songsError: any = null
-    
-    if (albumsResult.status === 'fulfilled') {
-      albums = albumsResult.value || []
-      console.log('✅ Albums search succeeded in searchAll:', {
-        query,
-        albumCount: albums.length,
-        timestamp: new Date().toISOString()
-      })
-    } else {
-      albumsError = albumsResult.reason
-      console.error('❌ Albums search failed in searchAll:', {
-        query,
-        error: albumsResult.reason,
-        errorMessage: albumsResult.reason instanceof Error ? albumsResult.reason.message : 'Unknown',
-        timestamp: new Date().toISOString()
-      })
-    }
-    
-    if (songsResult.status === 'fulfilled') {
-      songs = songsResult.value || []
-      console.log('✅ Songs search succeeded in searchAll:', {
-        query,
-        songCount: songs.length,
-        timestamp: new Date().toISOString()
-      })
-    } else {
-      songsError = songsResult.reason
-      console.error('❌ Songs search failed in searchAll:', {
-        query,
-        error: songsResult.reason,
-        errorMessage: songsResult.reason instanceof Error ? songsResult.reason.message : 'Unknown',
-        timestamp: new Date().toISOString()
-      })
-    }
-    
-    // Combine and deduplicate results
-    const allResults = [...albums, ...songs]
-    console.log('📊 searchAll combined results:', {
-      query,
-      albumResults: albums.length,
-      songResults: songs.length,
-      totalCombined: allResults.length,
-      timestamp: new Date().toISOString()
-    })
-    
-    if (allResults.length === 0) {
-      // Create a detailed error with information about both searches
-      const detailedError = {
-        query,
-        albumsSearchStatus: albumsResult.status,
-        songsSearchStatus: songsResult.status,
-        albumsError: albumsError ? {
-          message: albumsError instanceof Error ? albumsError.message : 'Unknown error',
-          name: albumsError instanceof Error ? albumsError.name : 'Unknown',
-          stack: albumsError instanceof Error ? albumsError.stack : 'No stack trace'
-        } : null,
-        songsError: songsError ? {
-          message: songsError instanceof Error ? songsError.message : 'Unknown error',
-          name: songsError instanceof Error ? songsError.name : 'Unknown',
-          stack: songsError instanceof Error ? songsError.stack : 'No stack trace'
-        } : null,
-        timestamp: new Date().toISOString()
-      }
-      
-      const error = new Error(`No results found for "${query}" from any iTunes API search (albums or songs). Albums: ${albumsResult.status}, Songs: ${songsResult.status}`)
-      ;(error as any).searchDetails = detailedError
-      
-      console.error('⚠️ No results from iTunes API in searchAll:', detailedError)
-      throw error
-    }
-    
-    const uniqueResults = allResults.filter((album, index, self) => 
-      index === self.findIndex(a => a.id === album.id)
-    )
-    
-    const finalResults = uniqueResults.slice(0, 50) // Limit to 50 total results
-    console.log('✅ searchAll completed successfully:', {
-      query,
-      inputAlbums: albums.length,
-      inputSongs: songs.length,
-      totalCombined: allResults.length,
-      uniqueResults: uniqueResults.length,
-      finalResults: finalResults.length,
-      timestamp: new Date().toISOString()
-    })
-    
-    return finalResults
-  } catch (error) {
-    console.error('❌ Unexpected error in searchAll:', {
-      query,
-      error,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      errorName: error instanceof Error ? error.name : 'Unknown',
-      errorStack: error instanceof Error ? error.stack : 'No stack trace',
-      searchDetails: (error as any).searchDetails || null,
-      timestamp: new Date().toISOString()
-    })
-    throw error
-  }
-}
+// Simplified search - albums only (removed songs search as requested)
+export const searchAll = searchAlbums
