@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'edge'
 
-export default async function handler(req: NextRequest) {
-  // Only allow GET requests
-  if (req.method !== 'GET') {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
-  }
-
+export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const term = searchParams.get('term')
@@ -88,7 +83,7 @@ export default async function handler(req: NextRequest) {
     })
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
