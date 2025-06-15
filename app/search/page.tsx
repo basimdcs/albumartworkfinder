@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import SearchResults from './search-results'
-import SearchForm from '@/components/search-form'
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string }>
@@ -28,25 +27,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 text-white">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">
-              {q ? `Search Results for "${q}"` : 'Search Album Artwork'}
-            </h1>
-            <p className="text-blue-100 mb-6">
-              {q ? `Finding album artwork for "${q}"` : 'Enter a search term to find high-quality album covers'}
-            </p>
-            
-            {/* Search Form */}
-            <SearchForm />
-          </div>
-        </div>
-      </div>
-
       {/* Results Section */}
       <div className="container mx-auto px-4 py-8">
+        {q && (
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Search Results for "{q}"
+            </h1>
+            <p className="text-gray-600">
+              Finding album artwork for "{q}"
+            </p>
+          </div>
+        )}
+        
         <Suspense fallback={
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>

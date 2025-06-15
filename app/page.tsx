@@ -19,14 +19,7 @@ const POPULAR_ARTISTS = [
   { id: 'ariana-grande', name: 'Ariana Grande', genre: 'Pop' },
 ]
 
-const MUSIC_CATEGORIES = [
-  { id: 'pop', name: 'Pop', icon: '🎵', color: 'from-pink-500 to-rose-500' },
-  { id: 'rock', name: 'Rock', icon: '🎸', color: 'from-red-500 to-orange-500' },
-  { id: 'hip-hop', name: 'Hip-Hop', icon: '🎤', color: 'from-purple-500 to-indigo-500' },
-  { id: 'jazz', name: 'Jazz', icon: '🎺', color: 'from-blue-500 to-cyan-500' },
-  { id: 'classical', name: 'Classical', icon: '🎼', color: 'from-green-500 to-teal-500' },
-  { id: 'country', name: 'Country', icon: '🤠', color: 'from-yellow-500 to-amber-500' },
-]
+
 
 // Static fallback data for immediate display
 const FALLBACK_ALBUMS: Album[] = [
@@ -87,46 +80,44 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Hero Section - PlacesPro inspired */}
+      {/* Hero Section - Compact PlacesPro inspired */}
       <section className="relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700"></div>
-        <div className="absolute inset-0 bg-black/10"></div>
+        {/* Background Pattern - matching PlacesPro colors */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900"></div>
+        <div className="absolute inset-0 bg-black/20"></div>
         
         {/* Floating Elements */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
-        <div className="absolute top-40 right-20 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+        <div className="absolute top-10 left-10 w-16 h-16 bg-white/5 rounded-full blur-xl"></div>
+        <div className="absolute top-20 right-20 w-20 h-20 bg-white/5 rounded-full blur-xl"></div>
         
-        <div className="relative container mx-auto px-4 py-16 md:py-24">
-          <div className="mx-auto max-w-4xl text-center text-white">
-            {/* Main Heading */}
-            <div className="mb-8">
-              <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
-                Discover Dream
-                <span className="block bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
+        <div className="relative container mx-auto px-4 py-12 md:py-16">
+          <div className="mx-auto max-w-3xl text-center text-white">
+            {/* Main Heading - More compact */}
+            <div className="mb-6">
+              <h1 className="mb-3 text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
+                Discover Amazing
+                <span className="block bg-gradient-to-r from-blue-300 via-purple-300 to-indigo-300 bg-clip-text text-transparent">
                   Album Artwork
                 </span>
               </h1>
-              <p className="mx-auto max-w-2xl text-lg opacity-90 md:text-xl lg:text-2xl">
-                Explore millions of high-quality album covers from your favorite artists. 
-                Find the perfect artwork for your music collection.
+              <p className="mx-auto max-w-xl text-base opacity-90 md:text-lg">
+                Search millions of high-quality album covers from your favorite artists
               </p>
             </div>
             
             {/* Search Form */}
-            <div className="mb-8">
+            <div className="mb-6">
               <SearchForm />
             </div>
             
             {/* Quick Search Tags */}
-            <div className="flex flex-wrap justify-center gap-3 text-sm">
-              <span className="text-blue-200">Popular searches:</span>
+            <div className="flex flex-wrap justify-center gap-2 text-sm">
+              <span className="text-slate-300">Try:</span>
               {['Taylor Swift', 'Drake', 'The Beatles', 'Adele'].map((artist) => (
                 <Link
                   key={artist}
                   href={`/search?q=${encodeURIComponent(artist)}`}
-                  className="rounded-full bg-white/20 px-4 py-2 transition-all hover:bg-white/30 hover:scale-105"
+                  className="rounded-full bg-white/10 px-3 py-1 transition-all hover:bg-white/20 hover:scale-105"
                 >
                   {artist}
                 </Link>
@@ -137,34 +128,7 @@ export default function Home() {
       </section>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
-        {/* Categories Section - PlacesPro style */}
-        <section className="mb-16">
-          <div className="mb-8 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-gray-900">
-              Explore Music Categories
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover album artwork across different genres and styles
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-            {MUSIC_CATEGORIES.map((category) => (
-              <Link
-                key={category.id}
-                href={`/search?q=${encodeURIComponent(category.name)}`}
-                className="group relative overflow-hidden rounded-2xl p-6 text-center transition-all hover:scale-105 hover:shadow-xl"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-90`}></div>
-                <div className="relative">
-                  <div className="mb-3 text-3xl">{category.icon}</div>
-                  <h3 className="font-semibold text-white">{category.name}</h3>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+      <div className="container mx-auto px-4 py-8">
 
         {/* Featured Albums Section */}
         <section className="mb-16">
