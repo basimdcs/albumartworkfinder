@@ -8,16 +8,19 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: [
           '/api/',
-          '/admin/',
           '/_next/',
+          '/admin/',
           '/private/',
+          '*.json',
+          '/search?*limit=*', // Prevent crawling paginated search results
         ],
-      },
+    },
       {
         userAgent: 'Googlebot',
         allow: '/',
         disallow: [
           '/api/',
+          '/_next/',
           '/admin/',
           '/private/',
         ],
@@ -27,6 +30,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: [
           '/api/',
+          '/_next/',
           '/admin/',
           '/private/',
         ],

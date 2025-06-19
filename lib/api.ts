@@ -188,62 +188,113 @@ const CORS_PROXIES = [
 const fetchWithMobileFallback = async (url: string): Promise<iTunesSearchResult> => {
   const mobile = isMobile()
   
-  console.log(`🔄 Attempting ${mobile ? 'mobile CORS proxy' : 'direct'} request...`)
-  
   // First try direct request (works on desktop)
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+    
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-      }
+        'User-Agent': 'AlbumArtworkFinder/1.0'
+      },
+      signal: controller.signal
     })
+    
+    clearTimeout(timeoutId)
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
     
-    const data = await response.json()
-    console.log('✅ Direct request successful')
+    const text = await response.text()
+    
+    // Validate response text before parsing
+    if (!text || text.trim() === '' || text === 'undefined' || text === 'null') {
+      throw new Error('Empty or invalid response from iTunes API')
+    }
+    
+    // Check if response looks like JSON
+    if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+      throw new Error('Response is not valid JSON format')
+    }
+    
+    let data: iTunesSearchResult
+    try {
+      data = JSON.parse(text)
+    } catch (parseError) {
+      throw new Error('Failed to parse iTunes API response as JSON')
+    }
+    
+    // Validate the parsed data structure
+    if (!data || typeof data !== 'object' || !Array.isArray(data.results)) {
+      throw new Error('Invalid iTunes API response structure')
+    }
+    
     return data
   } catch (directError) {
-    console.log(`⚠️ Direct request failed: ${directError instanceof Error ? directError.message : 'Unknown'}`)
+    // If direct fails, try CORS proxies (especially for mobile)
+    const proxiesToTry = mobile ? CORS_PROXIES : CORS_PROXIES.slice(0, 1) // Try fewer proxies on desktop
     
-    // If direct fails and we're on mobile, try CORS proxies
-    if (mobile) {
-      for (let i = 0; i < CORS_PROXIES.length; i++) {
-        const proxy = CORS_PROXIES[i]
-        try {
-          console.log(`🔄 Trying CORS proxy ${i + 1}/${CORS_PROXIES.length}: ${proxy}`)
-          
-          const proxyUrl = `${proxy}${encodeURIComponent(url)}`
-          const response = await fetch(proxyUrl, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-            }
-          })
-          
-          if (!response.ok) {
-            throw new Error(`Proxy HTTP ${response.status}: ${response.statusText}`)
-          }
-          
-          const data = await response.json()
-          console.log(`✅ CORS proxy ${i + 1} successful`)
-          return data
-        } catch (proxyError) {
-          console.log(`❌ CORS proxy ${i + 1} failed: ${proxyError instanceof Error ? proxyError.message : 'Unknown'}`)
-          
-          // If this is the last proxy, throw the error
-          if (i === CORS_PROXIES.length - 1) {
-            throw new Error(`All CORS proxies failed. Last error: ${proxyError instanceof Error ? proxyError.message : 'Unknown'}`)
-          }
+    for (let i = 0; i < proxiesToTry.length; i++) {
+      const proxy = proxiesToTry[i]
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+        
+        const proxyUrl = `${proxy}${encodeURIComponent(url)}`
+        const response = await fetch(proxyUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+          signal: controller.signal
+        })
+        
+        clearTimeout(timeoutId)
+        
+        if (!response.ok) {
+          throw new Error(`Proxy HTTP ${response.status}: ${response.statusText}`)
         }
+        
+        const text = await response.text()
+        
+        // Validate response text before parsing
+        if (!text || text.trim() === '' || text === 'undefined' || text === 'null') {
+          throw new Error('Empty or invalid response from proxy')
+        }
+        
+        // Check if response looks like JSON
+        if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+          throw new Error('Proxy response is not valid JSON format')
+        }
+        
+        let data: iTunesSearchResult
+        try {
+          data = JSON.parse(text)
+        } catch (parseError) {
+          throw new Error('Failed to parse proxy response as JSON')
+        }
+        
+        // Validate the parsed data structure
+        if (!data || typeof data !== 'object' || !Array.isArray(data.results)) {
+          throw new Error('Invalid proxy response structure')
+        }
+        
+        return data
+      } catch (proxyError) {
+        // If this is the last proxy, throw a more user-friendly error
+        if (i === proxiesToTry.length - 1) {
+          throw new Error(`Unable to connect to iTunes. Please check your internet connection and try again.`)
+        }
+        // Continue to next proxy
+        continue
       }
     }
     
-    // If we get here, all methods failed
-    throw new Error(`All request methods failed. Direct: ${directError instanceof Error ? directError.message : 'Unknown'}`)
+    // This should never be reached, but just in case
+    throw new Error(`Unable to connect to iTunes. Please check your internet connection and try again.`)
   }
 }
 
@@ -253,19 +304,14 @@ const getCachedData = async <T>(key: string, fetcher: () => Promise<T>): Promise
   const now = Date.now()
   
   if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-    console.log(`📦 Cache hit for key: ${key}`)
     return cached.data as T
   }
-  
-  console.log(`🔄 Cache miss for key: ${key}, fetching fresh data...`)
   
   try {
     const data = await fetcher()
     cache.set(key, { data, timestamp: now })
-    console.log(`✅ Successfully cached data for key: ${key}`)
     return data
   } catch (error) {
-    console.error(`❌ Error fetching data for key: ${key}`, error)
     // Remove any cached data for this key
     cache.delete(key)
     throw error
@@ -296,22 +342,6 @@ const getArtworkUrl = (artworkUrl: string, highRes: boolean = false): string => 
 // Helper function to get high-resolution artwork URL (up to 1000x1000px) - for backward compatibility
 const getHighResArtwork = (artworkUrl: string): string => {
   return getArtworkUrl(artworkUrl, true)
-}
-
-// Helper function to create SEO-friendly URL slugs
-export const createSEOSlug = (text: string): string => {
-  return text
-    .toLowerCase()
-    .trim()
-    // Replace special characters and symbols with hyphens
-    .replace(/[^\w\s-]/g, '-')
-    // Replace multiple spaces or hyphens with single hyphen
-    .replace(/[\s_-]+/g, '-')
-    // Remove leading/trailing hyphens
-    .replace(/^-+|-+$/g, '')
-    // Limit length to 50 characters for better SEO
-    .substring(0, 50)
-    .replace(/-+$/, '') // Remove trailing hyphen if substring cuts mid-word
 }
 
 // Helper function to format duration from milliseconds
@@ -429,7 +459,24 @@ export const getTopAlbums = async (): Promise<Album[]> => {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      const data: iTunesRSSFeed = await response.json()
+      const text = await response.text()
+      
+      // Validate response text before parsing
+      if (!text || text.trim() === '' || text === 'undefined' || text === 'null') {
+        throw new Error('Empty or invalid response from iTunes RSS')
+      }
+      
+      // Check if response looks like JSON
+      if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+        throw new Error('Response is not valid JSON format')
+      }
+      
+      let data: iTunesRSSFeed
+      try {
+        data = JSON.parse(text)
+      } catch (parseError) {
+        throw new Error('Failed to parse iTunes RSS response as JSON')
+      }
       
       if (!data.feed?.entry) {
         throw new Error('Invalid RSS feed structure')
@@ -437,7 +484,6 @@ export const getTopAlbums = async (): Promise<Album[]> => {
       
       return data.feed.entry.map((entry, index) => convertRSSEntryToAlbum(entry, index, false))
     } catch (error) {
-      console.error('Error fetching top albums from RSS:', error)
       // Fallback to search API with popular terms
       return getPopularAlbumsFromSearch()
     }
@@ -453,7 +499,24 @@ export const getTopSingles = async (): Promise<Album[]> => {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      const data: iTunesRSSFeed = await response.json()
+      const text = await response.text()
+      
+      // Validate response text before parsing
+      if (!text || text.trim() === '' || text === 'undefined' || text === 'null') {
+        throw new Error('Empty or invalid response from iTunes RSS')
+      }
+      
+      // Check if response looks like JSON
+      if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+        throw new Error('Response is not valid JSON format')
+      }
+      
+      let data: iTunesRSSFeed
+      try {
+        data = JSON.parse(text)
+      } catch (parseError) {
+        throw new Error('Failed to parse iTunes RSS response as JSON')
+      }
       
       if (!data.feed?.entry) {
         throw new Error('Invalid RSS feed structure')
@@ -461,7 +524,6 @@ export const getTopSingles = async (): Promise<Album[]> => {
       
       return data.feed.entry.map((entry, index) => convertRSSEntryToAlbum(entry, index, false))
     } catch (error) {
-      console.error('Error fetching top singles from RSS:', error)
       // Fallback to search API with popular terms
       return getPopularSinglesFromSearch()
     }
@@ -497,7 +559,6 @@ const getPopularAlbumsFromSearch = async (): Promise<Album[]> => {
     // If we have some results, return them; otherwise return static fallback
     return albums.length > 0 ? albums.slice(0, 25) : STATIC_FALLBACK_ALBUMS
   } catch (error) {
-    console.error('Error fetching popular albums from search:', error)
     // Return static fallback data for immediate loading
     return STATIC_FALLBACK_ALBUMS
   }
@@ -532,7 +593,6 @@ const getPopularSinglesFromSearch = async (): Promise<Album[]> => {
     // If we have some results, return them; otherwise return static fallback
     return songs.length > 0 ? songs.slice(0, 25) : STATIC_FALLBACK_ALBUMS
   } catch (error) {
-    console.error('Error fetching popular singles from search:', error)
     // Return static fallback data for immediate loading
     return STATIC_FALLBACK_ALBUMS
   }
@@ -560,41 +620,20 @@ export const getPopularArtists = async (): Promise<Artist[]> => {
 export const searchAlbums = async (query: string): Promise<Album[]> => {
   if (!query.trim()) {
     const error = new Error('Empty search query provided')
-    console.error('❌ SearchAlbums Error:', {
-      error: error.message,
-      query,
-      timestamp: new Date().toISOString()
-    })
     throw error
   }
   
   // Block server-side calls completely
   if (typeof window === 'undefined') {
     const error = new Error('Server-side iTunes API calls are blocked to prevent rate limiting and CORS issues')
-    console.error('🚫 Server-side search attempt blocked:', {
-      query,
-      error: error.message,
-      location: 'searchAlbums',
-      timestamp: new Date().toISOString(),
-      stack: new Error().stack
-    })
     throw error
   }
   
   return getCachedData(`albums_${query}`, async () => {
     // iTunes API URL
-    const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=album&limit=50&country=US`
+    const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=album&limit=25`
     
-    console.log('🔍 iTunes Album Search Started (mobile-friendly):', {
-      query,
-      encodedQuery: encodeURIComponent(query),
-      itunesUrl,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator?.userAgent || 'Unknown',
-      location: window?.location?.href || 'Unknown',
-      online: navigator?.onLine || 'Unknown',
-      isMobile: isMobile()
-    })
+
     
     const startTime = performance.now()
     let data: iTunesSearchResult
@@ -623,7 +662,6 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
           } : 'Not available'
         }
       }
-      console.error('❌ Network error during iTunes API fetch:', errorDetails)
       throw new Error(`Network error accessing iTunes API: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}. Duration: ${Math.round(endTime - startTime)}ms`)
     }
 
@@ -638,24 +676,10 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
         duration: `${requestDuration}ms`,
         timestamp: new Date().toISOString()
       }
-      console.error('❌ Invalid iTunes API response structure:', errorDetails)
       throw new Error(`Invalid iTunes API response structure. Expected {resultCount: number, results: array}, got: ${JSON.stringify(data)}. Duration: ${requestDuration}ms`)
     }
     
-    console.log('📊 iTunes API Response Analysis:', {
-      query,
-      totalResults: data.resultCount,
-      actualResults: data.results.length,
-      duration: `${requestDuration}ms`,
-      timestamp: new Date().toISOString()
-    })
-    
     if (data.results.length === 0) {
-      console.log('⚠️ No results from iTunes API:', {
-        query,
-        resultCount: data.resultCount,
-        timestamp: new Date().toISOString()
-      })
       return []
     }
     
@@ -667,21 +691,8 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
       item.artworkUrl100
     )
     
-    console.log('🔍 Album Filtering Results:', {
-      query,
-      inputResults: data.results.length,
-      validAlbums: validAlbums.length,
-      filterSuccessRate: `${Math.round((validAlbums.length / data.results.length) * 100)}%`,
-      timestamp: new Date().toISOString()
-    })
-    
     if (validAlbums.length === 0) {
       const error = new Error(`No valid albums found for "${query}". Found ${data.results.length} iTunes results but none were valid albums.`)
-      console.error('❌ No valid albums after filtering:', {
-        query,
-        totalResults: data.results.length,
-        timestamp: new Date().toISOString()
-      })
       throw error
     }
     
@@ -690,40 +701,14 @@ export const searchAlbums = async (query: string): Promise<Album[]> => {
         try {
           return convertToAlbum(item, false)
         } catch (conversionError) {
-          console.error('❌ Failed to convert iTunes album item:', {
-            query,
-            index,
-            item: {
-              collectionName: item.collectionName,
-              artistName: item.artistName,
-              collectionId: item.collectionId
-            },
-            error: conversionError,
-            timestamp: new Date().toISOString()
-          })
           return null
         }
       })
       .filter((album): album is Album => album !== null)
-      .slice(0, 50)
+      .slice(0, 25)
       
-    console.log('✅ iTunes Album Search Completed (mobile-friendly):', {
-      query,
-      totalDuration: `${requestDuration}ms`,
-      inputResults: data.results.length,
-      validAlbums: validAlbums.length,
-      finalAlbums: albums.length,
-      conversionSuccessRate: `${Math.round((albums.length / validAlbums.length) * 100)}%`,
-      timestamp: new Date().toISOString()
-    })
-    
     if (albums.length === 0) {
       const error = new Error(`Failed to convert any valid albums for "${query}". All ${validAlbums.length} valid iTunes results failed during conversion.`)
-      console.error('❌ No albums after conversion:', {
-        query,
-        validAlbums: validAlbums.length,
-        timestamp: new Date().toISOString()
-      })
       throw error
     }
     
@@ -738,7 +723,6 @@ export const getAlbumById = async (id: string): Promise<Album | null> => {
     const response = await fetch(lookupUrl)
     
     if (!response.ok) {
-      console.error(`iTunes API HTTP error: ${response.status} ${response.statusText}`)
       return null
     }
     
@@ -746,13 +730,11 @@ export const getAlbumById = async (id: string): Promise<Album | null> => {
     
     // More robust validation
     if (!text || text.trim() === '' || text === 'undefined' || text === 'null') {
-      console.error('Empty or invalid response from iTunes API')
       return null
     }
     
     // Check if response looks like JSON
     if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
-      console.error('Response does not appear to be JSON:', text.substring(0, 100))
       return null
     }
     
@@ -760,30 +742,24 @@ export const getAlbumById = async (id: string): Promise<Album | null> => {
     try {
       data = JSON.parse(text)
     } catch (parseError) {
-      console.error('Failed to parse iTunes API response:', parseError)
-      console.error('Response text:', text.substring(0, 200))
       return null
     }
     
     // Validate response structure
     if (!data || typeof data !== 'object') {
-      console.error('Invalid iTunes API response structure - not an object:', typeof data)
       return null
     }
     
     if (!Array.isArray(data.results)) {
-      console.error('Invalid iTunes API response structure - results is not an array:', typeof data.results)
       return null
     }
     
     if (data.results.length === 0) {
-      console.error('No results found in iTunes API response')
       return null
     }
     
     const albumInfo = data.results[0]
     if (!albumInfo) {
-      console.error('First result is null or undefined')
       return null
     }
     
@@ -802,7 +778,6 @@ export const getAlbumById = async (id: string): Promise<Album | null> => {
     
     return album
   } catch (error) {
-    console.error('Error fetching album by ID:', error)
     return null
   }
 }
@@ -819,7 +794,6 @@ export const getRelatedAlbums = async (albumId: string): Promise<Album[]> => {
     const response = await fetch(searchUrl)
     
     if (!response.ok) {
-      console.error(`iTunes API HTTP error: ${response.status} ${response.statusText}`)
       return []
     }
     
@@ -827,13 +801,11 @@ export const getRelatedAlbums = async (albumId: string): Promise<Album[]> => {
     
     // More robust validation
     if (!text || text.trim() === '' || text === 'undefined' || text === 'null') {
-      console.error('Empty or invalid response from iTunes API')
       return []
     }
     
     // Check if response looks like JSON
     if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
-      console.error('Response does not appear to be JSON:', text.substring(0, 100))
       return []
     }
     
@@ -841,7 +813,6 @@ export const getRelatedAlbums = async (albumId: string): Promise<Album[]> => {
     try {
       data = JSON.parse(text)
     } catch (parseError) {
-      console.error('Failed to parse iTunes API response:', parseError)
       return []
     }
     
@@ -855,7 +826,6 @@ export const getRelatedAlbums = async (albumId: string): Promise<Album[]> => {
       .map(item => convertToAlbum(item, false)) // Use smaller images for related albums
       .slice(0, 12) // Limit to 12 related albums
   } catch (error) {
-    console.error('Error fetching related albums:', error)
     return []
   }
 }

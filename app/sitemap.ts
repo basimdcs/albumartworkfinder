@@ -1,56 +1,78 @@
 import { MetadataRoute } from 'next'
+import { getPopularSearchQueries, getPopularAlbumPages } from '@/lib/search-tracking'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = 'force-dynamic'
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://albumartworkfinder.com'
-  
-  // Popular artists for sitemap
-  const popularArtists = [
-    'taylor-swift', 'drake', 'the-beatles', 'adele', 'ed-sheeran',
-    'billie-eilish', 'post-malone', 'ariana-grande', 'the-weeknd', 'dua-lipa',
-    'harry-styles', 'olivia-rodrigo', 'bad-bunny', 'kanye-west', 'beyonce',
-    'eminem', 'rihanna', 'justin-bieber', 'lady-gaga', 'bruno-mars'
-  ]
 
-  // Popular genres for sitemap
-  const popularGenres = [
-    'pop', 'rock', 'hip-hop', 'country', 'electronic', 'jazz', 'classical',
-    'r-b', 'indie', 'alternative', 'metal', 'folk', 'reggae', 'blues'
-  ]
-
-  const staticPages = [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'daily' as const,
+      changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: `${baseUrl}/search`,
       lastModified: new Date(),
-      changeFrequency: 'daily' as const,
+      changeFrequency: 'weekly',
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/terms`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
     },
   ]
 
-  // Add popular artist search pages
-  const artistPages = popularArtists.map(artist => ({
-    url: `${baseUrl}/search?q=${encodeURIComponent(artist.replace('-', ' '))}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }))
+  let dynamicSearchPages: MetadataRoute.Sitemap = []
+  try {
+    const popularQueries = await getPopularSearchQueries(100) // Get top 100 tracked queries
+    const uniqueQueries = [...new Set(popularQueries.map(q => q.toLowerCase().trim()))]
+      .filter(q => q.length > 2)
 
-  // Add popular genre search pages
-  const genrePages = popularGenres.map(genre => ({
-    url: `${baseUrl}/search?q=${encodeURIComponent(genre)}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }))
+    dynamicSearchPages = uniqueQueries.map(query => ({
+      url: `${baseUrl}/search?q=${encodeURIComponent(query)}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.5,
+    }))
+  } catch (error) {
+    console.error('Failed to load dynamic search queries for sitemap:', error)
+  }
 
-  return [
+  let albumArtworkPages: MetadataRoute.Sitemap = []
+  try {
+    const popularAlbums = await getPopularAlbumPages(1000) // Track top 1000 album pages
+
+    albumArtworkPages = popularAlbums.map(album => ({
+      url: `${baseUrl}/album/${album.albumId}/${album.slug}`,
+      lastModified: new Date(album.lastSeen),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    }))
+  } catch (error) {
+    console.error('Failed to load album pages for sitemap:', error)
+  }
+
+  const allPages = [
     ...staticPages,
-    ...artistPages,
-    ...genrePages,
+    ...dynamicSearchPages,
+    ...albumArtworkPages,
   ]
+
+  // Remove duplicates based on URL
+  const uniquePages = allPages.filter((page, index, self) =>
+    index === self.findIndex(p => p.url === page.url)
+  )
+
+  return uniquePages
 }

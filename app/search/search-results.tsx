@@ -1,290 +1,228 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { searchAlbums, type Album } from '@/lib/api'
-import AlbumCard from '@/components/album-card'
+import { trackEvent } from '@/components/google-analytics'
+import Image from 'next/image'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { RefreshCw, Music } from 'lucide-react'
 
-interface SearchResultsProps {
-  query?: string
+// Inline SEO slug function to avoid webpack issues
+const createSEOSlug = (text: string): string => {
+  if (!text) return ''
+  return text
+    .toLowerCase()
+    .trim()
+    // Replace special characters and symbols with hyphens
+    .replace(/[^\w\s-]/g, '-')
+    // Replace multiple spaces or hyphens with single hyphen
+    .replace(/[\s_-]+/g, '-')
+    // Remove leading/trailing hyphens
+    .replace(/^-+|-+$/g, '')
+    // Limit length to 70 characters for better SEO
+    .substring(0, 70)
+    .replace(/-+$/, '') // Remove trailing hyphen if substring cuts mid-word
 }
 
-interface SearchError {
-  message: string
-  details?: any
-  timestamp: string
+interface SearchResultsProps {
   query: string
 }
 
-interface DebugInfo {
-  searchStarted?: string
-  query?: string
-  clientSide?: boolean
-  online?: boolean
-  userAgent?: string
-  searchCompleted?: string
-  searchFailed?: string
-  duration?: string
-  resultsCount?: number
-  success?: boolean
-  error?: any
+// Track search query via API - fire and forget for performance
+async function trackSearch(query: string, resultCount: number) {
+  try {
+    // Don't await - fire and forget to avoid blocking UI
+    fetch('/api/track-search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'search', query, resultCount }),
+    }).catch(console.error)
+  } catch (error) {
+    console.error('Search tracking failed:', error)
+  }
+}
+
+// Track a batch of album pages via API - fire and forget
+async function trackAlbumBatch(albums: Album[]) {
+  try {
+    const albumData = albums.map(album => ({
+      albumId: album.collectionId || album.id,
+      artist: album.artist,
+      title: album.title,
+      slug: `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`,
+    }))
+
+    fetch('/api/track-search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'album-batch', albums: albumData }),
+    }).catch(console.error)
+  } catch (error) {
+    console.error('Album batch tracking failed:', error)
+  }
 }
 
 export default function SearchResults({ query }: SearchResultsProps) {
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<SearchError | null>(null)
-  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!query?.trim()) {
+  const handleSearch = useCallback(async () => {
+    if (!query.trim()) {
       setAlbums([])
-      setError(null)
-      setDebugInfo(null)
       return
     }
-
-    const performSearch = async () => {
-      const searchStartTime = performance.now()
-      console.log('🔍 SearchResults: Starting album search for:', {
-        query,
-        timestamp: new Date().toISOString(),
-        userAgent: navigator?.userAgent || 'Unknown',
-        online: navigator?.onLine || 'Unknown'
-      })
       
       setLoading(true)
       setError(null)
-      setDebugInfo({
-        searchStarted: new Date().toISOString(),
-        query: query.trim(),
-        clientSide: typeof window !== 'undefined',
-        online: navigator?.onLine,
-        userAgent: navigator?.userAgent?.substring(0, 100) + '...'
-      })
-      
-      try {
-        const results = await searchAlbums(query.trim())
-        const searchEndTime = performance.now()
-        const duration = Math.round(searchEndTime - searchStartTime)
-        
-        console.log('✅ SearchResults: Album search completed successfully:', {
-          query,
-          resultsCount: results.length,
-          duration: `${duration}ms`,
-          timestamp: new Date().toISOString()
-        })
-        
-        setAlbums(results)
-        setDebugInfo(prev => ({
-          ...prev,
-          searchCompleted: new Date().toISOString(),
-          duration: `${duration}ms`,
-          resultsCount: results.length,
-          success: true
-        }))
-        
-        if (results.length === 0) {
-          console.log('⚠️ SearchResults: No albums found but search succeeded:', query)
-        }
-      } catch (err) {
-        const searchEndTime = performance.now()
-        const duration = Math.round(searchEndTime - searchStartTime)
-        
-        const errorDetails = {
-          query,
-          error: err,
-          errorMessage: err instanceof Error ? err.message : 'Unknown error',
-          errorName: err instanceof Error ? err.name : 'Unknown',
-          errorStack: err instanceof Error ? err.stack : 'No stack trace',
-          duration: `${duration}ms`,
-          timestamp: new Date().toISOString(),
-          clientInfo: {
-            online: navigator?.onLine,
-            userAgent: navigator?.userAgent,
-            location: window?.location?.href,
-            connection: (navigator as any)?.connection ? {
-              effectiveType: (navigator as any).connection.effectiveType,
-              downlink: (navigator as any).connection.downlink,
-              rtt: (navigator as any).connection.rtt
-            } : 'Not available'
-          }
-        }
-        
-        console.error('❌ SearchResults: Album search failed:', errorDetails)
-        
-        setError({
-          message: err instanceof Error ? err.message : 'Unknown search error',
-          details: errorDetails,
-          timestamp: new Date().toISOString(),
-          query: query.trim()
-        })
-        
-        setDebugInfo(prev => ({
-          ...prev,
-          searchFailed: new Date().toISOString(),
-          duration: `${duration}ms`,
-          error: errorDetails,
-          success: false
-        }))
-        
-        setAlbums([])
-      } finally {
-        setLoading(false)
-      }
-    }
 
-    // Add a small delay to debounce rapid queries
-    const timeoutId = setTimeout(performSearch, 300)
-    return () => clearTimeout(timeoutId)
+    try {
+      const results = await searchAlbums(query)
+      setAlbums(results)
+      
+      // Track the search query with result count (fire and forget)
+      trackSearch(query, results.length)
+      
+      // Track the entire batch of albums that appear in search results
+      if (results.length > 0) {
+        trackAlbumBatch(results)
+      }
+      
+      // Track Google Analytics search event (fast, client-side)
+      trackEvent('search_results', {
+        search_term: query,
+        result_count: results.length,
+        search_type: 'album_artwork'
+      })
+    } catch (err) {
+      console.error('Search failed:', err)
+      setError('Search failed. Please check your connection and try again.')
+      setAlbums([])
+      
+      // Track search error
+      trackEvent('search_error', {
+        search_term: query,
+        error_message: 'Search failed'
+      })
+    } finally {
+      setLoading(false)
+    }
   }, [query])
+
+  useEffect(() => {
+    handleSearch()
+  }, [handleSearch])
+
+  const handleAlbumClick = (album: Album) => {
+    // Track album click event (fast, client-side)
+    trackEvent('album_click', {
+      album_id: album.collectionId || album.id,
+      album_title: album.title,
+      artist_name: album.artist,
+      click_source: 'search_results'
+    })
+  }
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600 mb-2">Searching iTunes for albums...</p>
-        <p className="text-sm text-gray-500 mb-4">Query: "{query}"</p>
-        {debugInfo && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto text-left">
-            <h4 className="font-medium text-blue-800 mb-2">Debug Info:</h4>
-            <div className="text-xs text-blue-700 space-y-1">
-              <p>Started: {debugInfo.searchStarted}</p>
-              <p>Client-side: {debugInfo.clientSide ? 'Yes' : 'No'}</p>
-              <p>Online: {debugInfo.online ? 'Yes' : 'No'}</p>
-            </div>
+      <div className="space-y-6">
+        {/* Loading header */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-blue-50 rounded-full">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+            <span className="text-blue-700 font-medium">Searching for albums...</span>
           </div>
-        )}
+            </div>
+            
+        {/* Loading grid with 25 items */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
+          {Array.from({ length: 25 }).map((_, i) => (
+            <div key={i} className="group">
+              <div className="relative aspect-square bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg animate-pulse mb-3">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                <div className="flex justify-between">
+                  <div className="h-3 bg-gray-200 rounded animate-pulse w-12"></div>
+                  <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-4xl mx-auto">
-          <h3 className="font-bold text-red-800 mb-4">Album Search Error</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-red-700 font-medium mb-2">Error Message:</p>
-              <p className="text-red-600 bg-red-100 p-3 rounded font-mono text-sm">{error.message}</p>
-            </div>
-            
-            <div>
-              <p className="text-red-700 font-medium mb-2">Search Details:</p>
-              <div className="text-sm text-red-600 space-y-1">
-                <p><strong>Query:</strong> "{error.query}"</p>
-                <p><strong>Timestamp:</strong> {error.timestamp}</p>
-                {error.details?.duration && <p><strong>Duration:</strong> {error.details.duration}</p>}
-              </div>
-            </div>
-
-            {error.details && (
-              <div>
-                <p className="text-red-700 font-medium mb-2">Technical Details:</p>
-                <div className="bg-red-100 p-3 rounded text-xs font-mono text-red-600 max-h-96 overflow-y-auto">
-                  <pre>{JSON.stringify(error.details, null, 2)}</pre>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-              <p className="text-yellow-800 text-sm">
-                <strong>Copy Error Details:</strong>
-              </p>
-              <button
-                onClick={() => navigator.clipboard.writeText(JSON.stringify(error.details, null, 2))}
-                className="mt-2 px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300"
-              >
-                Copy to Clipboard
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="text-center py-12">
+        <div className="text-red-600 mb-4">{error}</div>
+        <Button onClick={handleSearch} variant="outline" className="gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Try Again
+        </Button>
       </div>
     )
   }
 
-  if (!query?.trim()) {
+  if (albums.length === 0 && query.trim()) {
     return (
       <div className="text-center py-12">
-        <div className="max-w-md mx-auto">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Search for Album Artwork</h3>
-          <p className="text-gray-600">Enter an artist name, album title, or song to find high-quality album covers.</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (albums.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="max-w-md mx-auto">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.824-2.562M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Albums Found</h3>
+        <Music className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No albums found</h3>
           <p className="text-gray-600 mb-4">
-            No albums found for "{query}". Try searching with different keywords or check the spelling.
+          Try searching for a different artist or album name
           </p>
           <div className="text-sm text-gray-500">
-            <p>Search tips:</p>
-            <ul className="mt-2 space-y-1">
-              <li>• Try the artist name only</li>
-              <li>• Check spelling and try variations</li>
-              <li>• Use simpler search terms</li>
-            </ul>
-          </div>
+          Popular searches: Taylor Swift, Drake, The Beatles, Billie Eilish
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Found {albums.length} album{albums.length !== 1 ? 's' : ''} for "{query}"
-          </h2>
-          {debugInfo?.duration && (
-            <p className="text-sm text-gray-500 mt-1">
-              Search completed in {debugInfo.duration}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {albums.map((album) => (
-          <AlbumCard 
-            key={album.id} 
-            id={album.id}
-            title={album.title}
-            artist={album.artist}
-            imageUrl={album.imageUrl}
-            year={album.year}
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
+      {albums.map((album, index) => {
+        const slug = `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`
+        const albumUrl = `/album/${album.collectionId || album.id}/${slug}`
+        
+        return (
+          <Link 
+            key={album.collectionId || album.id} 
+            href={albumUrl}
+            onClick={() => handleAlbumClick(album)}
+            className="group block"
+          >
+            <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3 shadow-sm hover:shadow-md transition-shadow">
+              <Image
+                src={album.imageUrl}
+                alt={`${album.title} by ${album.artist}`}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
+                priority={index < 6}
+                quality={65}
           />
-        ))}
       </div>
-
-      {debugInfo && debugInfo.success && (
-        <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h4 className="font-medium text-green-800 mb-2">Search Success</h4>
-          <div className="text-sm text-green-700 space-y-1">
-            <p>Query: "{debugInfo.query}"</p>
-            <p>Results: {debugInfo.resultsCount} albums</p>
-            <p>Duration: {debugInfo.duration}</p>
-            <p>Completed: {debugInfo.searchCompleted}</p>
+            <div className="space-y-1">
+              <h3 className="font-medium text-sm text-gray-900 line-clamp-2 leading-tight">
+                {album.title}
+              </h3>
+              <p className="text-xs text-gray-600 line-clamp-1">
+                {album.artist}
+              </p>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{album.year || 'Unknown'}</span>
+                <span>{album.trackCount || 0} tracks</span>
           </div>
         </div>
-      )}
+          </Link>
+        )
+      })}
     </div>
   )
 } 

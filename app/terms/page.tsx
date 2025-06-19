@@ -1,137 +1,152 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: "Terms of Service | AlbumArtworkFinder.com",
-  description: "Terms of Service and usage guidelines for AlbumArtworkFinder.com. Learn about our policies for using our album artwork search service.",
-  robots: {
-    index: true,
-    follow: true,
+  title: 'Terms of Service - AlbumArtworkFinder',
+  description: 'Terms of Service for AlbumArtworkFinder. Learn about our usage policies, copyright information, and user responsibilities for album artwork downloads.',
+  keywords: ['terms of service', 'album artwork', 'copyright', 'usage policy', 'legal'],
+  openGraph: {
+    title: 'Terms of Service - AlbumArtworkFinder',
+    description: 'Terms of Service for AlbumArtworkFinder album artwork finder.',
+    url: 'https://albumartworkfinder.com/terms',
+  },
+  alternates: {
+    canonical: 'https://albumartworkfinder.com/terms',
   },
 }
 
 export default function TermsPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Breadcrumb */}
-      <nav className="mb-6 text-sm" aria-label="Breadcrumb">
-        <ol className="flex items-center space-x-2">
-          <li>
-            <Link href="/" className="text-primary hover:underline">
-              Home
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li className="text-gray-700 font-medium">Terms of Service</li>
-        </ol>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="container mx-auto px-4 py-12">
+        <div className="mx-auto max-w-4xl">
+          {/* Breadcrumb */}
+          <nav className="mb-8 text-sm text-gray-600">
+            <Link href="/" className="hover:text-blue-600">Home</Link>
+            <span className="mx-2">/</span>
+            <span>Terms of Service</span>
+          </nav>
 
-      <div className="prose prose-gray max-w-none">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Terms of Service</h1>
-        
-        <p className="text-gray-600 mb-8">
-          <strong>Last updated:</strong> December 2024
-        </p>
+          <div className="rounded-2xl bg-white p-8 shadow-lg md:p-12">
+            <h1 className="mb-8 text-3xl font-bold text-gray-900 md:text-4xl">
+              Terms of Service
+            </h1>
+            
+            <div className="prose prose-lg max-w-none text-gray-700">
+              <p className="text-lg leading-relaxed mb-6">
+                Last updated: January 2024
+              </p>
 
-        <div className="space-y-8">
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
-            <p className="text-gray-700 leading-relaxed">
-              By accessing and using AlbumArtworkFinder.com ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
-            </p>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
+                <p>
+                  By accessing and using AlbumArtworkFinder ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Description of Service</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              AlbumArtworkFinder.com is a free service that allows users to search for and view album artwork from the iTunes catalog. Our service provides:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-              <li>Search functionality for album artwork</li>
-              <li>High-resolution album cover images (up to 1000x1000px)</li>
-              <li>Album information and track listings</li>
-              <li>Music preview functionality</li>
-              <li>Download capabilities for personal use</li>
-            </ul>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Service Description</h2>
+                <p>
+                  AlbumArtworkFinder is a free web application that allows users to search for and view album artwork from the iTunes catalog. Our service provides:
+                </p>
+                <ul className="list-disc pl-6 mt-4 space-y-2">
+                  <li>Search functionality for album artwork</li>
+                  <li>High-resolution image viewing up to 1000x1000px</li>
+                  <li>Mobile-optimized browsing experience</li>
+                  <li>Free access without registration requirements</li>
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Use License</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              Permission is granted to temporarily download one copy of the materials on AlbumArtworkFinder.com for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-              <li>Modify or copy the materials</li>
-              <li>Use the materials for any commercial purpose or for any public display</li>
-              <li>Attempt to reverse engineer any software contained on the website</li>
-              <li>Remove any copyright or other proprietary notations from the materials</li>
-            </ul>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Copyright and Intellectual Property</h2>
+                <p>
+                  All album artwork displayed on AlbumArtworkFinder is sourced from the iTunes catalog and remains the property of their respective copyright holders, including:
+                </p>
+                <ul className="list-disc pl-6 mt-4 space-y-2">
+                  <li>Record labels and music publishers</li>
+                  <li>Artists and their representatives</li>
+                  <li>Graphic designers and artwork creators</li>
+                  <li>Apple Inc. (iTunes Store)</li>
+                </ul>
+                <p className="mt-4">
+                  Users are responsible for ensuring their use of any artwork complies with applicable copyright laws and fair use provisions.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Content and Copyright</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              All album artwork, images, and related content displayed on this service are sourced from the iTunes catalog and remain the property of their respective copyright holders. We do not claim ownership of any album artwork or music content.
-            </p>
-            <p className="text-gray-700 leading-relaxed">
-              Users are responsible for ensuring their use of downloaded content complies with applicable copyright laws. Downloaded content should only be used for personal, non-commercial purposes.
-            </p>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Permitted Use</h2>
+                <p>You may use AlbumArtworkFinder for:</p>
+                <ul className="list-disc pl-6 mt-4 space-y-2">
+                  <li>Personal music library organization</li>
+                  <li>Educational and research purposes</li>
+                  <li>Non-commercial personal use</li>
+                  <li>Fair use under copyright law</li>
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. User Conduct</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              You agree not to use the service to:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-              <li>Violate any applicable laws or regulations</li>
-              <li>Infringe upon the rights of others</li>
-              <li>Distribute malware or harmful code</li>
-              <li>Attempt to gain unauthorized access to our systems</li>
-              <li>Use automated tools to scrape or download content in bulk</li>
-            </ul>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Prohibited Use</h2>
+                <p>You may NOT use AlbumArtworkFinder for:</p>
+                <ul className="list-disc pl-6 mt-4 space-y-2">
+                  <li>Commercial redistribution of artwork</li>
+                  <li>Selling or licensing artwork to third parties</li>
+                  <li>Creating derivative works for commercial purposes</li>
+                  <li>Violating copyright or intellectual property rights</li>
+                  <li>Automated scraping or bulk downloading</li>
+                  <li>Any illegal or unauthorized activities</li>
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Disclaimer</h2>
-            <p className="text-gray-700 leading-relaxed">
-              The materials on AlbumArtworkFinder.com are provided on an 'as is' basis. AlbumArtworkFinder makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
-            </p>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Disclaimer of Warranties</h2>
+                <p>
+                  AlbumArtworkFinder is provided "as is" without any representations or warranties, express or implied. We make no representations or warranties in relation to this website or the information and materials provided on this website.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Limitations</h2>
-            <p className="text-gray-700 leading-relaxed">
-              In no event shall AlbumArtworkFinder or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on AlbumArtworkFinder.com, even if AlbumArtworkFinder or an authorized representative has been notified orally or in writing of the possibility of such damage.
-            </p>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Limitation of Liability</h2>
+                <p>
+                  In no event shall AlbumArtworkFinder, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the service.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Privacy</h2>
-            <p className="text-gray-700 leading-relaxed">
-              Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the Service, to understand our practices.
-            </p>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Privacy Policy</h2>
+                <p>
+                  Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the Service, to understand our practices.
+                </p>
+                <Link href="/privacy" className="text-blue-600 hover:text-blue-800 underline">
+                  View Privacy Policy
+                </Link>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Changes to Terms</h2>
-            <p className="text-gray-700 leading-relaxed">
-              AlbumArtworkFinder may revise these terms of service at any time without notice. By using this service, you are agreeing to be bound by the then current version of these terms of service.
-            </p>
-          </section>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Changes to Terms</h2>
+                <p>
+                  We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact Information</h2>
-            <p className="text-gray-700 leading-relaxed">
-              If you have any questions about these Terms of Service, please contact us through our website.
-            </p>
-          </section>
-        </div>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact Information</h2>
+                <p>
+                  If you have any questions about these Terms of Service, please contact us through our website or by visiting our homepage.
+                </p>
+                <Link href="/" className="text-blue-600 hover:text-blue-800 underline">
+                  Return to Homepage
+                </Link>
+              </section>
 
-        <div className="mt-12 p-6 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 text-center">
-            By using AlbumArtworkFinder.com, you acknowledge that you have read and understood these Terms of Service and agree to be bound by them.
-          </p>
+              <div className="mt-12 p-6 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Note:</strong> This Terms of Service page is designed to be comprehensive and user-friendly. 
+                  AlbumArtworkFinder respects intellectual property rights and encourages responsible use of album artwork. 
+                  All artwork is sourced from publicly available iTunes data and remains the property of respective copyright holders.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -44,7 +44,6 @@ logs
 pids
 *.pid
 *.seed
-*.pid.lock
 
 # Coverage directory used by tools like istanbul
 coverage/
@@ -88,3 +87,7 @@ jspm_packages/
 
 # DynamoDB Local files
 .dynamodb/
+
+# Search tracking data
+/data/search-queries.json
+/data/album-pages.json

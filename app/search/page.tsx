@@ -24,17 +24,17 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { q } = await searchParams
-  
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Results Section */}
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         {q && (
-          <div className="mb-8">
+      <div className="mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Search Results for "{q}"
             </h1>
-            <p className="text-gray-600">
+          <p className="text-gray-600">
               Finding album artwork for "{q}"
             </p>
           </div>
@@ -46,9 +46,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <p className="text-gray-600">Loading search results...</p>
           </div>
         }>
-          <SearchResults query={q} />
+          <SearchResults query={q || ''} />
         </Suspense>
-      </div>
+        </div>
     </div>
   )
 }

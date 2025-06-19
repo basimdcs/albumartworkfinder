@@ -4,37 +4,65 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import Link from "next/link"
 import GlobalSearch from "@/components/global-search"
+import GoogleAnalytics from "@/components/google-analytics"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: 'swap',
+  preload: true,
+})
 
 export const metadata: Metadata = {
-  title: "Find High-Quality Album Artwork, Covers & More | AlbumArtworkFinder.com",
-  description: "Search and discover album artwork from millions of artists. Find high-quality album covers for your favorite music from the iTunes catalog.",
+  metadataBase: new URL('https://albumartworkfinder.com'),
+  title: {
+    default: 'AlbumArtworkFinder - Download High-Quality Album Covers & Music Artwork',
+    template: '%s | AlbumArtworkFinder'
+  },
+  description: 'Discover and download high-resolution album artwork, covers, and music art from millions of artists. Free, fast, and mobile-optimized album cover finder with iTunes integration.',
   keywords: [
-    "album artwork",
-    "album covers",
-    "music artwork",
-    "iTunes album art",
-    "high resolution album covers",
-    "album art download",
-    "music covers",
-    "album artwork finder"
+    'album artwork',
+    'album covers',
+    'music artwork',
+    'album art download',
+    'high resolution album covers',
+    'iTunes album art',
+    'music covers',
+    'album cover finder',
+    'free album artwork',
+    'music art gallery'
   ],
-  authors: [{ name: "AlbumArtworkFinder" }],
-  creator: "AlbumArtworkFinder",
-  publisher: "AlbumArtworkFinder",
+  authors: [{ name: 'AlbumArtworkFinder Team' }],
+  creator: 'AlbumArtworkFinder',
+  publisher: 'AlbumArtworkFinder',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://albumartworkfinder.com",
-    siteName: "AlbumArtworkFinder",
-    title: "Find High-Quality Album Artwork, Covers & More",
-    description: "Search and discover album artwork from millions of artists. Find high-quality album covers for your favorite music from the iTunes catalog.",
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://albumartworkfinder.com',
+    siteName: 'AlbumArtworkFinder',
+    title: 'AlbumArtworkFinder - Download High-Quality Album Covers & Music Artwork',
+    description: 'Discover and download high-resolution album artwork from millions of artists. Free, fast, and mobile-optimized.',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'AlbumArtworkFinder - High-Quality Album Covers',
+      }
+    ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Find High-Quality Album Artwork, Covers & More",
-    description: "Search and discover album artwork from millions of artists. Find high-quality album covers for your favorite music from the iTunes catalog.",
+    card: 'summary_large_image',
+    title: 'AlbumArtworkFinder - Download High-Quality Album Covers',
+    description: 'Discover and download high-resolution album artwork from millions of artists.',
+    images: ['/og-image.jpg'],
+    creator: '@albumartworkfinder',
   },
   robots: {
     index: true,
@@ -47,29 +75,19 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Album Artwork Finder',
-    startupImage: [
-      '/apple-touch-startup-image-768x1004.png',
-      '/apple-touch-startup-image-1536x2008.png',
-    ],
+  verification: {
+    google: 'your-google-verification-code',
+    yandex: 'your-yandex-verification-code',
+    yahoo: 'your-yahoo-verification-code',
   },
-  formatDetection: {
-    telephone: false,
+  alternates: {
+    canonical: 'https://albumartworkfinder.com',
+    languages: {
+      'en-US': 'https://albumartworkfinder.com',
+      'en-GB': 'https://albumartworkfinder.com/en-gb',
   },
-  other: {
-    'mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-status-bar-style': 'default',
-    'apple-mobile-web-app-title': 'Album Artwork Finder',
-    'application-name': 'Album Artwork Finder',
-    'msapplication-TileColor': '#3b82f6',
-    'msapplication-config': '/browserconfig.xml',
-    'theme-color': '#3b82f6',
   },
+  category: 'music',
 }
 
 // Enhanced viewport configuration for mobile
@@ -80,13 +98,64 @@ export const viewport: Viewport = {
   userScalable: true,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#3b82f6' },
-    { media: '(prefers-color-scheme: dark)', color: '#1d4ed8' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' }
   ],
 }
 
 // Enable static generation with 24-hour revalidation
 export const revalidate = 86400 // 24 hours in seconds
+
+// Structured Data for the website
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "AlbumArtworkFinder",
+  "alternateName": "Album Artwork Finder",
+  "url": "https://albumartworkfinder.com",
+  "description": "Discover and download high-resolution album artwork, covers, and music art from millions of artists.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://albumartworkfinder.com/search?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AlbumArtworkFinder",
+    "url": "https://albumartworkfinder.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://albumartworkfinder.com/logo.png",
+      "width": 512,
+      "height": 512
+    },
+    "sameAs": [
+      "https://twitter.com/albumartworkfinder",
+      "https://github.com/albumartworkfinder"
+    ]
+  },
+  "mainEntity": {
+    "@type": "WebApplication",
+    "name": "AlbumArtworkFinder",
+    "applicationCategory": "MusicApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "High-resolution album artwork download",
+      "Search millions of albums",
+      "Mobile-optimized interface",
+      "iTunes integration",
+      "Free to use"
+    ]
+  }
+}
 
 export default function RootLayout({
   children,
@@ -94,155 +163,53 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>
+        {/* Preconnect to external domains for performance */}
+        <link rel="preconnect" href="https://itunes.apple.com" />
+        <link rel="preconnect" href="https://is1-ssl.mzstatic.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+        
+        {/* DNS prefetch for better performance */}
+        <link rel="dns-prefetch" href="//itunes.apple.com" />
+        <link rel="dns-prefetch" href="//is1-ssl.mzstatic.com" />
+        <link rel="dns-prefetch" href="//api.allorigins.win" />
+        <link rel="dns-prefetch" href="//corsproxy.io" />
+        <link rel="dns-prefetch" href="//www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="//www.google-analytics.com" />
+        
+        {/* Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        
+        {/* Additional SEO Meta Tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="AlbumArtworkFinder" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#2563eb" />
+        <meta name="theme-color" content="#ffffff" />
+        
+        {/* Favicon and Icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="preconnect" href="https://itunes.apple.com" />
-        <link rel="dns-prefetch" href="https://itunes.apple.com" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${inter.className} safe-area-padding`}>
-        <header className="border-b bg-white shadow-sm sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-between gap-4">
-              <Link href="/" className="text-xl font-bold text-primary shrink-0 md:text-2xl">
-                AlbumArtworkFinder
-              </Link>
-              
-              {/* Global Search - Only show on non-homepage */}
-              <div className="flex-1 max-w-md mx-4">
-                <GlobalSearch />
-              </div>
-              
-              <nav className="hidden md:flex space-x-6 shrink-0">
-                <Link href="/" className="text-gray-600 hover:text-primary transition-colors">
-                  Home
-                </Link>
-                <Link href="/search" className="text-gray-600 hover:text-primary transition-colors">
-                  Search
-                </Link>
-              </nav>
-              
-              {/* Mobile menu button */}
-              <button className="md:hidden p-2 text-gray-600 hover:text-primary min-h-[44px] min-w-[44px] touch-target" aria-label="Menu">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </header>
-        
-        <main className="min-h-screen">{children}</main>
-        
-        <footer className="border-t bg-gray-50 py-12 mt-12">
-          <div className="container mx-auto px-4">
-            <div className="grid gap-8 md:grid-cols-4">
-              {/* Brand Section */}
-              <div className="md:col-span-1">
-                <Link href="/" className="text-xl font-bold text-primary mb-4 block">
-                  AlbumArtworkFinder
-                </Link>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Find high-quality album artwork from millions of artists. Download album covers 
-                  for your favorite music from the iTunes catalog.
-                </p>
-              </div>
-
-              {/* Quick Links */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">Quick Links</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link href="/" className="text-gray-600 hover:text-primary transition-colors">
-                      Home
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/search" className="text-gray-600 hover:text-primary transition-colors">
-                      Search Albums
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/search?q=2024" className="text-gray-600 hover:text-primary transition-colors">
-                      Latest Releases
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/search?q=top hits" className="text-gray-600 hover:text-primary transition-colors">
-                      Popular Albums
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Popular Artists */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">Popular Artists</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link href="/search?q=Taylor Swift" className="text-gray-600 hover:text-primary transition-colors">
-                      Taylor Swift
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/search?q=Drake" className="text-gray-600 hover:text-primary transition-colors">
-                      Drake
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/search?q=The Beatles" className="text-gray-600 hover:text-primary transition-colors">
-                      The Beatles
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/search?q=Adele" className="text-gray-600 hover:text-primary transition-colors">
-                      Adele
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Legal & Info */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">Legal & Info</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link href="/terms" className="text-gray-600 hover:text-primary transition-colors">
-                      Terms of Service
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/privacy" className="text-gray-600 hover:text-primary transition-colors">
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <span className="text-gray-600">
-                      High-res artwork up to 1000x1000px
-                    </span>
-                  </li>
-                  <li>
-                    <span className="text-gray-600">
-                      Free to use, no registration
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Bottom Section */}
-            <div className="border-t border-gray-200 mt-8 pt-8 text-center">
-              <p className="text-gray-600 text-sm">
-                &copy; 2024 AlbumArtworkFinder. All rights reserved.
-              </p>
-              <p className="text-gray-500 text-xs mt-2">
-                Album artwork sourced from iTunes. All rights belong to their respective owners.
-              </p>
-            </div>
-          </div>
-        </footer>
+      <body className={`${inter.className} antialiased`}>
+        <div className="flex min-h-screen flex-col">
+        <Header />
+          <main className="flex-1">
+            {children}
+          </main>
+        <Footer />
+        </div>
+        <GoogleAnalytics />
       </body>
     </html>
   )

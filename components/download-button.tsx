@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { trackDownload } from '@/components/google-analytics'
 
 interface DownloadButtonProps {
   imageUrl: string
@@ -17,6 +18,9 @@ export default function DownloadButton({ imageUrl, albumTitle, artistName }: Dow
     setIsDownloading(true)
     
     try {
+      // Track download event
+      trackDownload('download_artwork', albumTitle, imageUrl)
+      
       // Fetch the image
       const response = await fetch(imageUrl)
       const blob = await response.blob()
@@ -38,6 +42,8 @@ export default function DownloadButton({ imageUrl, albumTitle, artistName }: Dow
       // Cleanup
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+      
+      console.log('Download completed:', filename)
     } catch (error) {
       console.error('Error downloading image:', error)
       alert('Failed to download image. Please try again.')

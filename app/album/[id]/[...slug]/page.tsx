@@ -2,14 +2,34 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getAlbumById, getRelatedAlbums, createSEOSlug } from "@/lib/api"
+import { getAlbumById, getRelatedAlbums } from "@/lib/api"
 import DownloadButton from "@/components/download-button"
 import ShareButton from "@/components/share-button"
 import MusicPreview from "@/components/music-preview"
+import AlbumTracker from "@/components/album-tracker"
+
+// Inline SEO slug function to avoid webpack issues
+const createSEOSlug = (text: string): string => {
+  if (!text) return ''
+  return text
+    .toLowerCase()
+    .trim()
+    // Replace special characters and symbols with hyphens
+    .replace(/[^\w\s-]/g, '-')
+    // Replace multiple spaces or hyphens with single hyphen
+    .replace(/[\s_-]+/g, '-')
+    // Remove leading/trailing hyphens
+    .replace(/^-+|-+$/g, '')
+    // Limit length to 70 characters for better SEO
+    .substring(0, 70)
+    .replace(/-+$/, '') // Remove trailing hyphen if substring cuts mid-word
+}
 
 interface AlbumPageProps {
   params: Promise<{ id: string; slug?: string[] }>
 }
+
+
 
 export async function generateMetadata({ params }: AlbumPageProps): Promise<Metadata> {
   const { id } = await params
@@ -69,6 +89,9 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
     notFound()
   }
 
+  // Track direct album page visit for sitemap inclusion
+  const slug = `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`
+
   const relatedAlbums = await getRelatedAlbums(id)
 
   // JSON-LD structured data for SEO
@@ -100,6 +123,16 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      
+      {/* Track album page visit */}
+      <AlbumTracker 
+        albumId={album.collectionId || album.id}
+        artist={album.artist}
+        title={album.title}
+        slug={slug}
+        isDirectVisit={true}
+        relatedAlbums={relatedAlbums}
       />
       
       <div className="container mx-auto px-4 py-6 lg:py-8">
@@ -138,14 +171,14 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
 
             {/* Album Info */}
             <div className="space-y-6">
-              <div>
+            <div>
                 <h1 className="mb-2 text-2xl font-bold leading-tight md:text-3xl lg:text-4xl">{album.title}</h1>
-                <Link
-                  href={`/search?q=${encodeURIComponent(album.artist)}`}
+              <Link
+                href={`/search?q=${encodeURIComponent(album.artist)}`}
                   className="block text-lg text-primary hover:underline md:text-xl"
-                >
-                  {album.artist}
-                </Link>
+              >
+                {album.artist}
+              </Link>
               </div>
 
               {/* Album Details */}
@@ -170,7 +203,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
               {/* Action Buttons */}
               <div className="flex flex-col gap-3 sm:flex-row">
                 <DownloadButton 
-                  imageUrl={album.imageUrl} 
+                  imageUrl={album.imageUrl}
                   albumTitle={album.title}
                   artistName={album.artist}
                 />
