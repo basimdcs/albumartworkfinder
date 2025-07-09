@@ -1,63 +1,50 @@
 import { MetadataRoute } from 'next'
-import { getPopularSearchQueries, getPopularAlbumPages } from '@/lib/search-tracking'
+import { getPopularAlbumPages } from '@/lib/search-tracking'
 
 export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://albumartworkfinder.com'
+  const currentDate = new Date()
 
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'daily',
-      priority: 1,
+      priority: 1.0,
     },
     {
       url: `${baseUrl}/search`,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'monthly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'monthly',
       priority: 0.3,
     },
   ]
 
-  let dynamicSearchPages: MetadataRoute.Sitemap = []
-  try {
-    const popularQueries = await getPopularSearchQueries(100) // Get top 100 tracked queries
-    const uniqueQueries = [...new Set(popularQueries.map(q => q.toLowerCase().trim()))]
-      .filter(q => q.length > 2)
-
-    dynamicSearchPages = uniqueQueries.map(query => ({
-      url: `${baseUrl}/search?q=${encodeURIComponent(query)}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.5,
-    }))
-  } catch (error) {
-    console.error('Failed to load dynamic search queries for sitemap:', error)
-  }
-
+  // Get album pages with enhanced SEO priority
   let albumArtworkPages: MetadataRoute.Sitemap = []
   try {
-    const popularAlbums = await getPopularAlbumPages(1000) // Track top 1000 album pages
+    const popularAlbums = await getPopularAlbumPages(2000) // Increased to 2000 for better coverage
 
-    albumArtworkPages = popularAlbums.map(album => ({
+    albumArtworkPages = popularAlbums.map((album, index) => ({
       url: `${baseUrl}/album/${album.albumId}/${album.slug}`,
       lastModified: new Date(album.lastSeen),
-      changeFrequency: 'monthly',
-      priority: 0.7,
+      changeFrequency: 'weekly' as const, // More frequent updates for popular albums
+      // Higher priority for more popular albums (based on position)
+      priority: Math.max(0.5, 0.9 - (index / popularAlbums.length) * 0.4),
     }))
   } catch (error) {
     console.error('Failed to load album pages for sitemap:', error)
@@ -65,14 +52,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const allPages = [
     ...staticPages,
-    ...dynamicSearchPages,
     ...albumArtworkPages,
   ]
 
-  // Remove duplicates based on URL
-  const uniquePages = allPages.filter((page, index, self) =>
-    index === self.findIndex(p => p.url === page.url)
-  )
+  // Remove duplicates and sort by priority
+  const uniquePages = allPages
+    .filter((page, index, self) =>
+      index === self.findIndex(p => p.url === page.url)
+    )
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0))
 
   return uniquePages
 }

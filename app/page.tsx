@@ -6,7 +6,7 @@ import { createSEOSlug } from "@/lib/utils"
 import type { Album } from "@/lib/api"
 import { trackEvent } from '@/components/google-analytics'
 import Link from "next/link"
-import Image from "next/image"
+import OptimizedImage from "@/components/optimized-image"
 import SearchForm from "@/components/search-form"
 
 // Popular search terms for SEO and user guidance
@@ -27,6 +27,17 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    // Add canonical tag for homepage
+    const existingCanonical = document.querySelector('link[rel="canonical"]')
+    if (existingCanonical) {
+      existingCanonical.remove()
+    }
+    
+    const canonicalLink = document.createElement('link')
+    canonicalLink.rel = 'canonical'
+    canonicalLink.href = 'https://albumartworkfinder.com'
+    document.head.appendChild(canonicalLink)
+
     const loadData = async () => {
       setLoading(true)
       try {
@@ -134,85 +145,84 @@ export default function Home() {
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        {/* Hero Section - Compact PlacesPro inspired */}
-        <section className="relative overflow-hidden">
-          {/* Background Pattern - matching PlacesPro colors */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900"></div>
-          <div className="absolute inset-0 bg-black/20"></div>
+        {/* Compact Hero Section - Optimized for LCP */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+          {/* Simplified background elements for faster rendering */}
+          <div className="absolute inset-0 bg-black/10"></div>
           
-          {/* Floating Elements */}
-          <div className="absolute top-10 left-10 w-16 h-16 bg-white/5 rounded-full blur-xl"></div>
-          <div className="absolute top-20 right-20 w-20 h-20 bg-white/5 rounded-full blur-xl"></div>
-          
-          <div className="relative container mx-auto px-4 py-12 md:py-16">
+          <div className="relative container mx-auto px-4 py-8 md:py-12">
             <div className="mx-auto max-w-4xl text-center text-white">
-              {/* Main Heading - SEO Optimized */}
-              <div className="mb-8">
-                <h1 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl xl:text-6xl">
-                  Download High-Quality
+              {/* Compact Heading */}
+              <div className="mb-6">
+                <h1 className="mb-3 text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
+                  Find & Download
                   <span className="block bg-gradient-to-r from-blue-300 via-purple-300 to-indigo-300 bg-clip-text text-transparent">
-                    Album Artwork
+                    High-Quality Album Artwork
                   </span>
-          </h1>
-                <p className="mx-auto max-w-2xl text-lg opacity-90 md:text-xl leading-relaxed">
-                  Discover and download high-resolution album covers from millions of artists. 
-                  Free, fast, and mobile-optimized album artwork finder with iTunes integration.
+                </h1>
+                <p className="mx-auto max-w-xl text-base opacity-90 md:text-lg">
+                  Search millions of albums and download HD artwork instantly. Free and mobile-optimized.
                 </p>
               </div>
               
               {/* Search Form */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <SearchForm />
               </div>
               
-              {/* Popular Search Categories */}
-              <div className="mb-6">
-                <p className="text-slate-300 mb-4 text-sm">Popular Categories:</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {['Pop', 'Hip-Hop', 'Rock', 'Alternative', 'Country', 'Electronic'].map((genre) => (
-                    <Link
-                      key={genre}
-                      href={`/search?q=${encodeURIComponent(genre)}`}
-                      onClick={() => handleGenreClick(genre)}
-                      className="rounded-full bg-white/10 px-4 py-2 text-sm transition-all hover:bg-white/20 hover:scale-105"
-                    >
-                      {genre}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Quick Search Tags */}
+              {/* Quick Search Tags - Simplified */}
               <div className="flex flex-wrap justify-center gap-2 text-sm">
-                <span className="text-slate-300">Try:</span>
-                {['Taylor Swift', 'Drake', 'The Beatles', 'Adele'].map((artist) => (
+                <span className="text-slate-300 hidden sm:inline">Popular:</span>
+                {['Taylor Swift', 'Drake', 'The Beatles', 'Adele', 'Pop', 'Hip-Hop'].map((term) => (
                   <Link
-                    key={artist}
-                    href={`/search?q=${encodeURIComponent(artist)}`}
-                    onClick={() => handleArtistClick(artist)}
-                    className="rounded-full bg-white/10 px-3 py-1 transition-all hover:bg-white/20 hover:scale-105"
-              >
-                    {artist}
+                    key={term}
+                    href={`/search?q=${encodeURIComponent(term)}`}
+                    onClick={() => handleArtistClick(term)}
+                    className="rounded-full bg-white/10 px-3 py-1 transition-all hover:bg-white/20 hover:scale-105 text-xs sm:text-sm"
+                  >
+                    {term}
                   </Link>
                 ))}
               </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-12">
+          
+          {/* Stats Section */}
+          <section className="mb-16">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div className="text-2xl font-bold text-blue-600 mb-2">10M+</div>
+                <div className="text-sm text-gray-600">Album Covers</div>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div className="text-2xl font-bold text-purple-600 mb-2">1000px</div>
+                <div className="text-sm text-gray-600">Max Resolution</div>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div className="text-2xl font-bold text-green-600 mb-2">100%</div>
+                <div className="text-sm text-gray-600">Free</div>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div className="text-2xl font-bold text-orange-600 mb-2">0s</div>
+                <div className="text-sm text-gray-600">Registration</div>
+              </div>
+            </div>
+          </section>
 
           {/* Featured Albums Section */}
           {(topAlbums.length > 0 || loading) && (
             <section className="mb-16">
               <div className="mb-8 text-center">
                 <h2 className="text-2xl font-bold text-gray-900 md:text-3xl mb-3">
-                  Featured Album Artwork
+                  Trending Album Artwork
                   {loading && <span className="ml-3 text-sm text-gray-500">Loading...</span>}
                 </h2>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  Trending high-resolution album covers from top artists. Download artwork up to 1000x1000px resolution.
+                  Discover the most popular album covers right now. High-resolution downloads up to 1000x1000px.
                 </p>
               </div>
               
@@ -220,9 +230,10 @@ export default function Home() {
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {Array.from({ length: 12 }).map((_, index) => (
                     <div key={index} className="animate-pulse">
-                      <div className="aspect-square bg-gray-200 rounded-xl mb-3"></div>
+                      <div className="aspect-square bg-gray-200 rounded-xl mb-3 shadow-lg"></div>
                       <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                     </div>
                   ))}
                 </div>
@@ -231,20 +242,19 @@ export default function Home() {
                   {topAlbums.slice(0, 12).map((album, index) => (
                     <Link 
                       key={album.id || index} 
-                      href={`/album/${album.id}/${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`}
+                      href={`/album/${album.collectionId || album.id}/${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`}
                       onClick={() => handleAlbumClick(album, 'featured_albums')}
                       className="group block"
                     >
                       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 shadow-lg transition-all group-hover:shadow-2xl group-hover:scale-105">
-                <Image
+                <OptimizedImage
                           src={album.imageUrl || "/placeholder.svg"}
                           alt={`${album.title} by ${album.artist} album artwork - high resolution download`}
                           fill
                           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16.67vw"
                           className="object-cover"
-                          priority={index < 6}
-                          loading={index < 6 ? "eager" : "lazy"}
-                          quality={65}
+                          priority={index < 3}
+                          loading={index < 3 ? "eager" : "lazy"}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
                         <div className="absolute bottom-0 left-0 right-0 p-3 text-white opacity-0 transition-opacity group-hover:opacity-100">
@@ -281,9 +291,10 @@ export default function Home() {
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {Array.from({ length: 12 }).map((_, index) => (
                     <div key={index} className="animate-pulse">
-                      <div className="aspect-square bg-gray-200 rounded-xl mb-3"></div>
+                      <div className="aspect-square bg-gray-200 rounded-xl mb-3 shadow-lg"></div>
                       <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                     </div>
                   ))}
                 </div>
@@ -292,19 +303,18 @@ export default function Home() {
                   {topSingles.slice(0, 12).map((album, index) => (
                     <Link 
                       key={album.id || index} 
-                      href={`/album/${album.id}/${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`}
+                      href={`/album/${album.collectionId || album.id}/${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`}
                       onClick={() => handleAlbumClick(album, 'latest_songs')}
                       className="group block"
                     >
                       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 shadow-lg transition-all group-hover:shadow-2xl group-hover:scale-105">
-                        <Image
+                        <OptimizedImage
                           src={album.imageUrl || "/placeholder.svg"}
                           alt={`${album.title} by ${album.artist} single artwork - high resolution download`}
                           fill
                           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16.67vw"
                           className="object-cover"
                           loading="lazy"
-                          quality={65}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
                         <div className="absolute bottom-0 left-0 right-0 p-3 text-white opacity-0 transition-opacity group-hover:opacity-100">
@@ -328,21 +338,26 @@ export default function Home() {
           <section className="mb-16">
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-bold text-gray-900 md:text-3xl mb-3">
-                Popular Artist Album Covers
+                Popular Artists & Genres
               </h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Browse album artwork from the most searched artists. Find covers from your favorite musicians.
+                Quick access to the most searched artists and music genres.
               </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-8">
-              {POPULAR_SEARCHES.map((item) => (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
+              {POPULAR_SEARCHES.map((item, index) => (
                 <Link 
                   key={item.term} 
                   href={`/search?q=${encodeURIComponent(item.term)}`} 
-                  className="group text-center p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-all"
+                  className="group text-center p-4 rounded-xl bg-white shadow-sm hover:shadow-lg transition-all hover:scale-105 border border-gray-100"
                 >
-                  <div className="mx-auto mb-3 h-16 w-16 overflow-hidden rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 shadow-lg transition-all group-hover:scale-110 group-hover:shadow-xl">
+                  <div className={`mx-auto mb-3 h-14 w-14 overflow-hidden rounded-full bg-gradient-to-br shadow-md transition-all group-hover:scale-110 group-hover:shadow-xl ${
+                    index % 4 === 0 ? 'from-blue-400 to-blue-600' :
+                    index % 4 === 1 ? 'from-purple-400 to-purple-600' :
+                    index % 4 === 2 ? 'from-pink-400 to-pink-600' :
+                    'from-orange-400 to-orange-600'
+                  }`}>
                     <div className="flex h-full w-full items-center justify-center text-white font-bold text-sm">
                       {item.term.split(' ').map(n => n[0]).join('')}
                     </div>
@@ -351,10 +366,10 @@ export default function Home() {
                     <p className="text-sm font-medium text-gray-900 truncate">{item.term}</p>
                     <p className="text-xs text-gray-500">{item.category}</p>
                   </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+                </Link>
+              ))}
+            </div>
+          </section>
         </div>
 
         {/* Features Section - SEO Enhanced */}
@@ -384,7 +399,7 @@ export default function Home() {
                   {
                     icon: '🆓',
                     title: 'Completely Free',
-                    description: 'No registration required, no fees, no limits. Just pure album artwork discovery and download.'
+                    description: 'No fees, no limits. Just pure album artwork discovery and download.'
                   },
                   {
                     icon: '🌍',

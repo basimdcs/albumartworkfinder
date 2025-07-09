@@ -1,0 +1,9 @@
+# Modern browsers only - reduces polyfills by 43 KiB
+> 0.5%
+last 2 versions
+not dead
+not ie 11
+not chrome < 91
+not firefox < 90
+not safari < 14
+not edge < 91

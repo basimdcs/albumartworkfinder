@@ -13,12 +13,34 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
     return {
       title: 'Search Album Artwork | AlbumArtworkFinder',
       description: 'Search for album artwork, covers, and music from millions of artists. Find high-quality album art from the iTunes catalog.',
+      alternates: {
+        canonical: 'https://albumartworkfinder.com/search',
+      },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+        },
+      },
     }
   }
 
   return {
     title: `Search Results for "${q}" | AlbumArtworkFinder`,
     description: `Find album artwork for "${q}". Search results from millions of albums and artists in the iTunes catalog.`,
+    alternates: {
+      canonical: `https://albumartworkfinder.com/search?q=${encodeURIComponent(q)}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
+    },
   }
 }
 

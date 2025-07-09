@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { searchAlbums, type Album } from '@/lib/api'
 import { trackEvent } from '@/components/google-analytics'
-import Image from 'next/image'
+import OptimizedImage from '@/components/optimized-image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Music } from 'lucide-react'
@@ -67,18 +67,40 @@ export default function SearchResults({ query }: SearchResultsProps) {
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatches
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) {
       setAlbums([])
       return
     }
+
+    // Ensure we're on the client side
+    if (typeof window === 'undefined') {
+      console.error('Search attempted on server side - this should not happen')
+      return
+    }
       
-      setLoading(true)
-      setError(null)
+    setLoading(true)
+    setError(null)
+
+    // Set a maximum loading timeout as a safety net
+    const maxLoadingTimeout = setTimeout(() => {
+      setLoading(false)
+      setError('Search is taking too long. Please try again.')
+    }, 20000) // 20 seconds max
 
     try {
+      console.log(`Starting search for: "${query}"`)
+      const startTime = Date.now()
       const results = await searchAlbums(query)
+      const endTime = Date.now()
+      console.log(`Search completed in ${endTime - startTime}ms for: "${query}"`)
       setAlbums(results)
       
       // Track the search query with result count (fire and forget)
@@ -97,15 +119,29 @@ export default function SearchResults({ query }: SearchResultsProps) {
       })
     } catch (err) {
       console.error('Search failed:', err)
-      setError('Search failed. Please check your connection and try again.')
+      
+      // Provide more specific error messages
+      let errorMessage = 'Search failed. Please try again.'
+      if (err instanceof Error) {
+        if (err.message.includes('timeout')) {
+          errorMessage = 'Search timed out. The iTunes API is slow - please try again.'
+        } else if (err.message.includes('network')) {
+          errorMessage = 'Network error. Please check your connection and try again.'
+        } else if (err.message.includes('No valid albums found')) {
+          errorMessage = `No albums found for "${query}". Try a different search term.`
+        }
+      }
+      
+      setError(errorMessage)
       setAlbums([])
       
-      // Track search error
+      // Track search error with more details
       trackEvent('search_error', {
         search_term: query,
-        error_message: 'Search failed'
+        error_message: err instanceof Error ? err.message : 'Unknown error'
       })
     } finally {
+      clearTimeout(maxLoadingTimeout)
       setLoading(false)
     }
   }, [query])
@@ -122,6 +158,20 @@ export default function SearchResults({ query }: SearchResultsProps) {
       artist_name: album.artist,
       click_source: 'search_results'
     })
+  }
+
+  // Prevent hydration mismatches by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-blue-50 rounded-full">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+            <span className="text-blue-700 font-medium">Initializing...</span>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -198,16 +248,16 @@ export default function SearchResults({ query }: SearchResultsProps) {
             className="group block"
           >
             <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3 shadow-sm hover:shadow-md transition-shadow">
-              <Image
+              <OptimizedImage
                 src={album.imageUrl}
                 alt={`${album.title} by ${album.artist}`}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
                 priority={index < 6}
-                quality={65}
-          />
-      </div>
+                loading={index < 6 ? 'eager' : 'lazy'}
+              />
+            </div>
             <div className="space-y-1">
               <h3 className="font-medium text-sm text-gray-900 line-clamp-2 leading-tight">
                 {album.title}
@@ -218,8 +268,8 @@ export default function SearchResults({ query }: SearchResultsProps) {
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <span>{album.year || 'Unknown'}</span>
                 <span>{album.trackCount || 0} tracks</span>
-          </div>
-        </div>
+              </div>
+            </div>
           </Link>
         )
       })}

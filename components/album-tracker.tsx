@@ -1,8 +1,17 @@
 'use client'
 
 import { useEffect } from 'react'
-import { trackAlbumPage } from '@/lib/search-tracking'
-import type { Album } from '@/lib/api'
+
+// Helper function to create SEO-friendly slugs
+function createSEOSlug(text: string): string {
+  if (!text) return ''
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
 interface AlbumTrackerProps {
   albumId: string
@@ -10,7 +19,7 @@ interface AlbumTrackerProps {
   title: string
   slug: string
   isDirectVisit?: boolean
-  relatedAlbums?: Album[] // Accept related albums
+  relatedAlbums?: any[] // Accept related albums
 }
 
 // Client-side component to track album page visits without blocking rendering
@@ -23,33 +32,36 @@ export default function AlbumTracker({
   relatedAlbums = [], // Default to empty array
 }: AlbumTrackerProps) {
   useEffect(() => {
-    // Track the main album page visit
-    trackAlbumPage(albumId, artist, title, slug, isDirectVisit)
-      .catch(console.error)
+    // Track the main album page visit via API
+    fetch('/api/track-search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        type: 'album', 
+        albumId, 
+        artist, 
+        title, 
+        slug, 
+        isDirectVisit 
+      }),
+    }).catch(console.error)
 
     // Track related albums that are displayed on the page
     if (relatedAlbums.length > 0) {
-      relatedAlbums.forEach(album => {
-        if (album.collectionId && album.artist && album.title) {
-          const relatedSlug = `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`
-          // Track as non-direct visit since they appear as recommendations
-          trackAlbumPage(album.collectionId, album.artist, album.title, relatedSlug, false)
-            .catch(console.error)
-        }
-      })
+      const albumData = relatedAlbums.map(album => ({
+        albumId: album.collectionId || album.id,
+        artist: album.artist,
+        title: album.title,
+        slug: `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`,
+      }))
+
+      fetch('/api/track-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'album-batch', albums: albumData }),
+      }).catch(console.error)
     }
   }, [albumId, artist, title, slug, isDirectVisit, relatedAlbums])
 
   return null // This component does not render anything
 }
-
-// Helper function to create SEO-friendly slugs, duplicated to be self-contained
-function createSEOSlug(text: string): string {
-  if (!text) return ''
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-} 

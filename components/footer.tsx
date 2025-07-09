@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export default function Footer() {
   return (
-    <footer className="border-t bg-gray-50 py-12 mt-12">
+    <footer className="border-t bg-gray-50 py-12 mt-12" style={{ minHeight: '400px' }}>
       <div className="container mx-auto px-4">
         <div className="grid gap-8 md:grid-cols-4">
           {/* Brand Section */}
@@ -91,7 +91,7 @@ export default function Footer() {
               </li>
               <li>
                 <span className="text-gray-600">
-                  Free to use, no registration
+                  Free to use
                 </span>
               </li>
             </ul>

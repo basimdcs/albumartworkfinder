@@ -366,4 +366,4 @@ export async function cleanOldData(): Promise<void> {
   } catch (error) {
     console.error('Failed to clean old data:', error)
   }
-} 
+}

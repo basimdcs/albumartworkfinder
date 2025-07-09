@@ -9,20 +9,20 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/api/',
           '/_next/',
-          '/admin/',
           '/private/',
           '*.json',
-          '/search?*limit=*', // Prevent crawling paginated search results
+          '/search?*', // Disallow all search result pages with parameters
+          '/search/*', // Disallow search subdirectories
         ],
-    },
+      },
       {
         userAgent: 'Googlebot',
         allow: '/',
         disallow: [
           '/api/',
           '/_next/',
-          '/admin/',
           '/private/',
+          '/search?*', // Disallow search result pages for Googlebot
         ],
       },
       {
@@ -31,8 +31,8 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/api/',
           '/_next/',
-          '/admin/',
           '/private/',
+          '/search?*', // Disallow search result pages for Bingbot
         ],
       },
     ],

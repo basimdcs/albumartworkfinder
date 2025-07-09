@@ -81,7 +81,6 @@ export const metadata: Metadata = {
     yahoo: 'your-yahoo-verification-code',
   },
   alternates: {
-    canonical: 'https://albumartworkfinder.com',
     languages: {
       'en-US': 'https://albumartworkfinder.com',
       'en-GB': 'https://albumartworkfinder.com/en-gb',
@@ -165,21 +164,21 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <head>
-        {/* Preconnect to external domains for performance */}
+        {/* Preconnect to critical domains for performance */}
         <link rel="preconnect" href="https://itunes.apple.com" />
         <link rel="preconnect" href="https://is1-ssl.mzstatic.com" />
+        <link rel="preconnect" href="https://is2-ssl.mzstatic.com" />
+        <link rel="preconnect" href="https://is3-ssl.mzstatic.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://www.google-analytics.com" />
         
-        {/* DNS prefetch for better performance */}
-        <link rel="dns-prefetch" href="//itunes.apple.com" />
-        <link rel="dns-prefetch" href="//is1-ssl.mzstatic.com" />
-        <link rel="dns-prefetch" href="//api.allorigins.win" />
-        <link rel="dns-prefetch" href="//corsproxy.io" />
+        {/* DNS prefetch for analytics (lower priority) */}
         <link rel="dns-prefetch" href="//www.googletagmanager.com" />
         <link rel="dns-prefetch" href="//www.google-analytics.com" />
+        
+        {/* DNS prefetch for CORS proxies (backup only) */}
+        <link rel="dns-prefetch" href="//api.allorigins.win" />
+        <link rel="dns-prefetch" href="//corsproxy.io" />
         
         {/* Structured Data */}
         <script
@@ -195,10 +194,10 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#2563eb" />
         <meta name="theme-color" content="#ffffff" />
         
+        {/* Resource hints for critical resources */}
+        
         {/* Favicon and Icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${inter.className} antialiased`}>

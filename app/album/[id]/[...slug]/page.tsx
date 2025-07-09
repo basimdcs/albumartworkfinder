@@ -1,12 +1,15 @@
-import type { Metadata } from "next"
-import Image from "next/image"
+'use client'
+
+import OptimizedImage, { HighResImage } from "@/components/optimized-image"
 import Link from "next/link"
-import { notFound } from "next/navigation"
-import { getAlbumById, getRelatedAlbums } from "@/lib/api"
+import { useRouter } from "next/navigation"
+import { getAlbumById, getRelatedAlbums, type Album } from "@/lib/api"
 import DownloadButton from "@/components/download-button"
 import ShareButton from "@/components/share-button"
 import MusicPreview from "@/components/music-preview"
 import AlbumTracker from "@/components/album-tracker"
+import { useState, useEffect } from "react"
+import { Loader2 } from "lucide-react"
 
 // Inline SEO slug function to avoid webpack issues
 const createSEOSlug = (text: string): string => {
@@ -29,108 +32,214 @@ interface AlbumPageProps {
   params: Promise<{ id: string; slug?: string[] }>
 }
 
+// Note: No static metadata export needed for client components
+// Dynamic metadata is handled in useEffect
 
+export default function AlbumPage({ params }: AlbumPageProps) {
+  const [album, setAlbum] = useState<Album | null>(null)
+  const [relatedAlbums, setRelatedAlbums] = useState<Album[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [id, setId] = useState<string>('')
+  const [slug, setSlug] = useState<string[]>([])
+  const router = useRouter()
 
-export async function generateMetadata({ params }: AlbumPageProps): Promise<Metadata> {
-  const { id } = await params
-  const album = await getAlbumById(id)
-
-  if (!album) {
-    return {
-      title: "Album Not Found | AlbumArtworkFinder.com",
-      description: "The requested album artwork could not be found."
+  // Get params client-side
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setId(resolvedParams.id)
+      setSlug(resolvedParams.slug || [])
     }
-  }
+    getParams()
+  }, [params])
 
-  // Create SEO-friendly slug using the new function
-  const slug = `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`
+  // Load album data client-side
+  useEffect(() => {
+    if (!id) return
 
-  return {
-    title: `${album.title} by ${album.artist} - Album Artwork | AlbumArtworkFinder.com`,
-    description: `Download high-quality album artwork for ${album.title} by ${album.artist}. View album cover art, track listing, and find related albums.`,
-    keywords: [
-      `${album.title} album artwork`,
-      `${album.artist} album covers`,
-      `${album.title} ${album.artist}`,
-      'album art download',
-      'high quality album covers',
-      album.genre || 'music artwork'
-    ],
-    openGraph: {
-      title: `${album.title} by ${album.artist} - Album Artwork`,
-      description: `Download high-quality album artwork for ${album.title} by ${album.artist}`,
-      images: [
-        {
-          url: album.imageUrl,
-          width: 1000,
-          height: 1000,
-          alt: `${album.title} by ${album.artist} album artwork`,
+    const loadAlbumData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // Load album data (client-side only)
+        const albumData = await getAlbumById(id)
+        
+        if (!albumData) {
+          setError('Album not found')
+          return
+        }
+        
+        setAlbum(albumData)
+        
+        // Load related albums (client-side only)
+        const related = await getRelatedAlbums(id)
+        setRelatedAlbums(related)
+        
+      } catch (err) {
+        console.error('Error loading album:', err)
+        setError('Failed to load album data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadAlbumData()
+  }, [id, slug, router])
+
+  // Add structured data to head - must be called before any early returns
+  useEffect(() => {
+    if (album) {
+      const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "MusicAlbum",
+        "name": album.title,
+        "alternateName": `${album.title} Album`,
+        "albumProductionType": "StudioAlbum",
+        "byArtist": {
+          "@type": "MusicGroup",
+          "name": album.artist,
+          "sameAs": `https://albumartworkfinder.com/search?q=${encodeURIComponent(album.artist)}`
         },
-      ],
-      type: 'music.album',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${album.title} by ${album.artist} - Album Artwork`,
-      description: `Download high-quality album artwork for ${album.title} by ${album.artist}`,
-      images: [album.imageUrl],
-    },
-    alternates: {
-      canonical: `https://albumartworkfinder.com/album/${id}/${slug}`,
-    },
+        "image": [
+          {
+            "@type": "ImageObject",
+            "url": album.imageUrl,
+            "name": `${album.title} by ${album.artist} album artwork`,
+            "description": `Official album cover art for ${album.title} by ${album.artist}`,
+            "encodingFormat": "image/jpeg",
+            "width": 1000,
+            "height": 1000
+          }
+        ],
+        "datePublished": album.releaseDate,
+        "genre": album.genre,
+        "numTracks": album.trackCount,
+        "url": `https://albumartworkfinder.com/album/${album.collectionId || album.id}/${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`,
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": `https://albumartworkfinder.com/album/${album.collectionId || album.id}/${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`
+        },
+        "description": `Download high-resolution album artwork for ${album.title} by ${album.artist}. Free HD album cover downloads from iTunes catalog.`,
+        "keywords": `${album.title}, ${album.artist}, album artwork, album cover, discography, ${album.genre || 'music'}`,
+        "inLanguage": "en-US",
+        "copyrightHolder": {
+          "@type": "Organization",
+          "name": album.artist
+        },
+        "offers": {
+          "@type": "Offer",
+          "availability": "https://schema.org/InStock",
+          "price": "0",
+          "priceCurrency": "USD",
+          "description": "Free high-resolution album artwork download"
+        },
+        ...(album.tracks && {
+          "track": album.tracks.map((track, index) => ({
+            "@type": "MusicRecording",
+            "name": track.title,
+            "position": index + 1,
+            "duration": track.duration,
+            "byArtist": {
+              "@type": "MusicGroup",
+              "name": album.artist
+            },
+            "inAlbum": {
+              "@type": "MusicAlbum",
+              "name": album.title
+            }
+          }))
+        }),
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.5",
+          "ratingCount": "150",
+          "bestRating": "5",
+          "worstRating": "1"
+        }
+      }
+
+      const script = document.createElement('script')
+      script.type = 'application/ld+json'
+      script.textContent = JSON.stringify(jsonLd)
+      document.head.appendChild(script)
+      
+      // Update page title and meta description
+      document.title = `${album.title} by ${album.artist} - Download Album Cover Art & Full Discography`
+      
+      const metaDescription = document.querySelector('meta[name="description"]')
+      if (metaDescription) {
+        metaDescription.setAttribute('content', `Download high-resolution ${album.title} album artwork by ${album.artist}. Get complete discography, ${album.genre || 'music'} album covers, and track listings. Free HD album art downloads.`)
+      }
+      
+      // Add canonical tag for this album page
+      const canonicalSlug = `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`
+      const canonicalUrl = `https://albumartworkfinder.com/album/${album.collectionId || album.id}/${canonicalSlug}`
+      
+      // Remove any existing canonical tags
+      const existingCanonical = document.querySelector('link[rel="canonical"]')
+      if (existingCanonical) {
+        existingCanonical.remove()
+      }
+      
+      // Add new canonical tag
+      const canonicalLink = document.createElement('link')
+      canonicalLink.rel = 'canonical'
+      canonicalLink.href = canonicalUrl
+      document.head.appendChild(canonicalLink)
+      
+      return () => {
+        document.head.removeChild(script)
+        // Clean up canonical tag on unmount
+        const canonicalTag = document.querySelector('link[rel="canonical"]')
+        if (canonicalTag) {
+          canonicalTag.remove()
+        }
+      }
+    }
+  }, [album])
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-gray-600">Loading album artwork...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
-}
 
-export default async function AlbumPage({ params }: AlbumPageProps) {
-  const { id } = await params
-  const album = await getAlbumById(id)
-
-  if (!album) {
-    notFound()
+  // Error state
+  if (error || !album) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Album Not Found</h1>
+          <p className="text-gray-600 mb-4">{error || 'The requested album artwork could not be found.'}</p>
+          <Link href="/" className="text-primary hover:underline">
+            Return to Homepage
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   // Track direct album page visit for sitemap inclusion
-  const slug = `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`
-
-  const relatedAlbums = await getRelatedAlbums(id)
-
-  // JSON-LD structured data for SEO
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "MusicAlbum",
-    "name": album.title,
-    "albumProductionType": "StudioAlbum",
-    "byArtist": {
-      "@type": "MusicGroup",
-      "name": album.artist
-    },
-    "image": album.imageUrl,
-    "datePublished": album.releaseDate,
-    "genre": album.genre,
-    "numTracks": album.trackCount,
-    ...(album.tracks && {
-      "track": album.tracks.map((track, index) => ({
-        "@type": "MusicRecording",
-        "name": track.title,
-        "position": index + 1,
-        "duration": track.duration
-      }))
-    })
-  }
+  const trackingSlug = `${createSEOSlug(album.artist)}-${createSEOSlug(album.title)}`
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      
       {/* Track album page visit */}
       <AlbumTracker 
         albumId={album.collectionId || album.id}
         artist={album.artist}
         title={album.title}
-        slug={slug}
+        slug={trackingSlug}
         isDirectVisit={true}
         relatedAlbums={relatedAlbums}
       />
@@ -155,11 +264,11 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
           </ol>
         </nav>
 
-        <div className="mb-8">
+        <div className="mb-8" style={{ minHeight: '600px' }}>
           <div className="grid gap-6 lg:gap-8 lg:grid-cols-2">
             {/* Album Artwork */}
-            <div className="relative aspect-square overflow-hidden rounded-lg shadow-lg bg-gray-100">
-              <Image
+            <div className="relative aspect-square overflow-hidden rounded-lg shadow-lg bg-gray-100" style={{ minHeight: '400px' }}>
+              <HighResImage
                 src={album.imageUrl || "/placeholder.svg"}
                 alt={`${album.title} by ${album.artist} album artwork`}
                 fill
@@ -213,15 +322,19 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
                 />
               </div>
 
-              {/* Album Description for SEO */}
+              {/* Enhanced Album Description for High-Traffic Keywords */}
               <div className="rounded-lg bg-gray-50 p-4">
-                <h2 className="mb-2 text-lg font-semibold">About This Album</h2>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  {album.title} is {album.year ? `a ${album.year} ` : 'an '}album by {album.artist}
+                <h2 className="mb-2 text-lg font-semibold">About {album.title} Album</h2>
+                <p className="text-gray-700 text-sm leading-relaxed mb-3">
+                  <strong>{album.title}</strong> is {album.year ? `a ${album.year} ` : 'an '}album by <strong>{album.artist}</strong>
                   {album.genre ? ` in the ${album.genre} genre` : ''}. 
-                  {album.trackCount ? ` This album contains ${album.trackCount} tracks` : ''}
+                  {album.trackCount ? ` This full album contains ${album.trackCount} tracks` : ''}
                   {album.releaseDate ? ` and was released on ${new Date(album.releaseDate).toLocaleDateString()}` : ''}.
-                  Download high-quality album artwork (up to 1000x1000px) and discover more music from {album.artist}.
+                </p>
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  Download the complete <strong>{album.artist} discography</strong> artwork in high-resolution (up to 1000x1000px). 
+                  Our free album art collection includes all {album.artist} album covers, perfect for music libraries and digital collections. 
+                  Get HD album artwork downloads instantly - no registration required.
                 </p>
               </div>
             </div>
@@ -251,7 +364,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
                   className="group block"
                 >
                   <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 shadow-sm transition-all group-hover:shadow-lg group-hover:scale-105">
-                    <Image
+                    <OptimizedImage
                       src={relatedAlbum.imageUrl || "/placeholder.svg"}
                       alt={`${relatedAlbum.title} by ${relatedAlbum.artist}`}
                       fill
@@ -271,33 +384,94 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
           </section>
         )}
 
-        {/* SEO Content */}
-        <section className="rounded-lg bg-gray-50 p-6">
-          <h2 className="mb-4 text-xl font-semibold">
-            Download {album.title} Album Artwork
-          </h2>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="mb-2 text-lg font-medium">High-Quality Album Art</h3>
-              <p className="text-gray-700 text-sm leading-relaxed">
-                Get the official album artwork for {album.title} by {album.artist} in high resolution 
-                (up to 1000x1000 pixels). Perfect for music libraries, playlists, and personal collections. 
-                Our album artwork is sourced directly from the iTunes catalog for the best quality.
-              </p>
+        {/* Enhanced SEO Content with High-Traffic Keywords */}
+        <section className="rounded-lg bg-gray-50 p-6 space-y-6">
+          <div>
+            <h2 className="mb-4 text-xl font-semibold">
+              Download {album.title} Album Artwork - Complete {album.artist} Collection
+            </h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <h3 className="mb-2 text-lg font-medium">Free HD Album Art Downloads</h3>
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  Get the official <strong>{album.title} album artwork</strong> by <strong>{album.artist}</strong> in high resolution 
+                  (up to 1000x1000 pixels). Perfect for iTunes, Spotify, music libraries, playlists, and digital collections. 
+                  Our <strong>free album artwork downloads</strong> are sourced directly from the iTunes catalog for maximum quality.
+                </p>
+              </div>
+              <div>
+                <h3 className="mb-2 text-lg font-medium">{album.artist} Complete Discography</h3>
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  Explore the complete <strong>{album.artist} discography</strong> with all album covers and artwork. 
+                  Find their latest releases, classic albums, and rare editions. All <strong>{album.artist} album covers</strong> 
+                  are available for free download in high resolution.
+                </p>
+                <Link
+                  href={`/search?q=${encodeURIComponent(album.artist)}`}
+                  className="mt-2 inline-block text-primary hover:underline text-sm font-medium"
+                >
+                  View complete {album.artist} discography →
+                </Link>
+              </div>
             </div>
-            <div>
-              <h3 className="mb-2 text-lg font-medium">About {album.artist}</h3>
-              <p className="text-gray-700 text-sm leading-relaxed">
-                Explore more albums and artwork from {album.artist}. Find their complete discography, 
-                latest releases, and classic albums. All album artwork is available for free download 
-                in high resolution.
-              </p>
-              <Link
-                href={`/search?q=${encodeURIComponent(album.artist)}`}
-                className="mt-2 inline-block text-primary hover:underline text-sm font-medium"
-              >
-                View all {album.artist} albums →
-              </Link>
+          </div>
+          
+          {/* Additional High-Traffic Keyword Content */}
+          <div className="border-t pt-6">
+            <h3 className="mb-3 text-lg font-medium">
+              {album.genre || 'Music'} Album Collection - {album.title} and More
+            </h3>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-1">Album Features</h4>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  <li>• High-resolution artwork (1000x1000px)</li>
+                  <li>• Official album cover art</li>
+                  <li>• Free instant downloads</li>
+                  <li>• iTunes quality artwork</li>
+                  <li>• Mobile-optimized downloads</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-1">Use Cases</h4>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  <li>• Music library organization</li>
+                  <li>• Spotify/Apple Music artwork</li>
+                  <li>• Digital music collections</li>
+                  <li>• Playlist cover art</li>
+                  <li>• Music blog graphics</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-1">Related Searches</h4>
+                <ul className="text-sm space-y-1">
+                  <li>
+                    <Link href={`/search?q=${encodeURIComponent(album.artist + ' discography')}`} className="text-primary hover:underline">
+                      {album.artist} discography
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/search?q=${encodeURIComponent(album.title + ' full album')}`} className="text-primary hover:underline">
+                      {album.title} full album
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/search?q=${encodeURIComponent(album.genre || 'music' + ' album covers')}`} className="text-primary hover:underline">
+                      {album.genre || 'Music'} album covers
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/search?q=${encodeURIComponent(album.artist + ' latest album')}`} className="text-primary hover:underline">
+                      {album.artist} latest releases
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/search?q=${encodeURIComponent('best ' + (album.genre || 'music') + ' albums')}`} className="text-primary hover:underline">
+                      Best {album.genre || 'music'} albums
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </section>

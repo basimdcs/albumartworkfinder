@@ -19,6 +19,9 @@ function GoogleAnalyticsInner() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
+    // Ensure we're on the client side
+    if (typeof window === 'undefined') return
+    
     if (!GA_MEASUREMENT_ID || GA_MEASUREMENT_ID === 'G-XXXXXXXXXX') {
       console.log('Google Analytics not configured')
       return
@@ -31,11 +34,11 @@ function GoogleAnalyticsInner() {
 
     const url = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '')
     
-    // Track page views
+    // Track page views - use client-side values safely
     window.gtag('config', GA_MEASUREMENT_ID, {
       page_path: url,
-      page_title: document.title,
-      page_location: window.location.href,
+      page_title: document?.title || '',
+      page_location: window?.location?.href || '',
     })
 
     console.log('GA page view tracked:', url)
@@ -100,25 +103,23 @@ export default function GoogleAnalytics() {
 
   return (
     <>
-      {/* Google Analytics Scripts */}
+      {/* Google Analytics Scripts - Optimized loading */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         onLoad={() => {
           console.log('Google Analytics script loaded')
         }}
       />
       <Script
         id="google-analytics"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}', {
-              page_title: document.title,
-              page_location: window.location.href,
               send_page_view: true,
               anonymize_ip: true,
               allow_google_signals: false,
