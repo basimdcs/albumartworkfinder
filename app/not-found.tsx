@@ -23,8 +23,8 @@ export default function NotFound() {
         </div>
         
         <div className="space-y-4">
-          <Link
-            href="/"
+      <Link
+        href="/"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
             Browse Featured Albums
@@ -37,9 +37,9 @@ export default function NotFound() {
           <Link
             href="/search"
             className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-          >
+      >
             Search for Music
-          </Link>
+      </Link>
         </div>
         
         <div className="mt-8 text-xs text-gray-500">

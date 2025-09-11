@@ -2,8 +2,6 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import Link from "next/link"
-import GlobalSearch from "@/components/global-search"
 import GoogleAnalytics from "@/components/google-analytics"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
@@ -15,23 +13,43 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://albumartworkfinder.com'),
+  metadataBase: new URL('https://www.albumartworkfinder.com'),
   title: {
-    default: 'AlbumArtworkFinder - Download High-Quality Album Covers & Music Artwork',
-    template: '%s | AlbumArtworkFinder'
+    default: 'Album Artwork Finder - Download High-Resolution Album Covers & iTunes Art',
+    template: '%s | Album Artwork Finder'
   },
-  description: 'Discover and download high-resolution album artwork, covers, and music art from millions of artists. Free, fast, and mobile-optimized album cover finder with iTunes integration.',
+  description: 'Find and download high-resolution album artwork from millions of artists. Free album artwork finder with iTunes integration. Get HD album covers up to 5000x5000px instantly from the iTunes catalog.',
   keywords: [
+    // Primary competitive keywords - enhanced for "album artwork"
     'album artwork',
+    'album artwork finder',
+    'album artwork download',
+    'high resolution album artwork',
+    'iTunes album artwork',
+    'free album artwork',
+    'download album artwork',
+    'album artwork database',
+    'high quality album artwork',
+    'album art downloader', 
+    'iTunes artwork finder',
+    'album cover download free',
+    'music artwork download',
+    'HD album art',
+    'iTunes album art',
+    'free album covers',
+    'high resolution album covers',
+    'album art exchange',
+    'music cover art',
+    'best album artwork finder',
+    // Secondary keywords
     'album covers',
     'music artwork',
     'album art download',
-    'high resolution album covers',
-    'iTunes album art',
     'music covers',
     'album cover finder',
-    'free album artwork',
-    'music art gallery'
+    'music art gallery',
+    'vinyl album covers',
+    'CD artwork'
   ],
   authors: [{ name: 'AlbumArtworkFinder Team' }],
   creator: 'AlbumArtworkFinder',
@@ -44,24 +62,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://albumartworkfinder.com',
-    siteName: 'AlbumArtworkFinder',
-    title: 'AlbumArtworkFinder - Download High-Quality Album Covers & Music Artwork',
-    description: 'Discover and download high-resolution album artwork from millions of artists. Free, fast, and mobile-optimized.',
+    url: 'https://www.albumartworkfinder.com',
+    siteName: 'Album Artwork Finder',
+    title: 'Album Artwork Finder - Download High-Resolution Album Covers & iTunes Art',
+    description: 'Find and download high-resolution album artwork from millions of artists. Free album artwork finder with iTunes integration. Get HD album covers up to 5000x5000px.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/album-artwork-og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'AlbumArtworkFinder - High-Quality Album Covers',
+        alt: 'Album Artwork Finder - High-Resolution Album Covers & iTunes Art',
       }
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AlbumArtworkFinder - Download High-Quality Album Covers',
-    description: 'Discover and download high-resolution album artwork from millions of artists.',
-    images: ['/og-image.jpg'],
+    title: 'Album Artwork Finder - Download High-Resolution Album Covers & iTunes Art',
+    description: 'Find and download high-resolution album artwork from millions of artists. Free album artwork finder with iTunes integration.',
+    images: ['/album-artwork-og-image.jpg'],
     creator: '@albumartworkfinder',
   },
   robots: {
@@ -82,9 +100,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     languages: {
-      'en-US': 'https://albumartworkfinder.com',
-      'en-GB': 'https://albumartworkfinder.com/en-gb',
-  },
+      'en-US': 'https://www.albumartworkfinder.com',
+      'en-GB': 'https://www.albumartworkfinder.com/en-gb',
+    },
   },
   category: 'music',
 }
@@ -111,23 +129,23 @@ const structuredData = {
   "@type": "WebSite",
   "name": "AlbumArtworkFinder",
   "alternateName": "Album Artwork Finder",
-  "url": "https://albumartworkfinder.com",
+  "url": "https://www.albumartworkfinder.com",
   "description": "Discover and download high-resolution album artwork, covers, and music art from millions of artists.",
   "potentialAction": {
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://albumartworkfinder.com/search?q={search_term_string}"
+      "urlTemplate": "https://www.albumartworkfinder.com/search?q={search_term_string}"
     },
     "query-input": "required name=search_term_string"
   },
   "publisher": {
     "@type": "Organization",
     "name": "AlbumArtworkFinder",
-    "url": "https://albumartworkfinder.com",
+    "url": "https://www.albumartworkfinder.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://albumartworkfinder.com/logo.png",
+      "url": "https://www.albumartworkfinder.com/logo.png",
       "width": 512,
       "height": 512
     },
@@ -213,4 +231,3 @@ export default function RootLayout({
     </html>
   )
 }
-

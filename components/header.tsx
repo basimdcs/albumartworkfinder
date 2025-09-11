@@ -46,6 +46,15 @@ export default function Header() {
             <Link href="/search" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">
               Browse
             </Link>
+            <Link href="/top-100-album-covers" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">
+              Top Albums
+            </Link>
+            <Link href="/top-100-single-covers" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">
+              Top Singles
+            </Link>
+            <Link href="/blog" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">
+              Blog
+            </Link>
           </nav>
           
           {/* Mobile Menu Button */}
@@ -57,7 +66,7 @@ export default function Header() {
         </div>
       </div>
       
-      {/* Search Bar Section - Hide on homepage, avoid hydration mismatch */}
+      {/* Search Bar Section - Show on all pages except homepage */}
       {mounted && !isHomePage && (
         <div className="bg-gray-50 border-t border-gray-100">
           <div className="container mx-auto px-4 py-3">

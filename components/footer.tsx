@@ -31,6 +31,21 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/top-100-album-covers" className="text-gray-600 hover:text-primary transition-colors">
+                  Top 100 Albums
+                </Link>
+              </li>
+              <li>
+                <Link href="/top-100-single-covers" className="text-gray-600 hover:text-primary transition-colors">
+                  Top 100 Singles
+                </Link>
+              </li>
+              <li>
+                <Link href="/best-album-covers" className="text-gray-600 hover:text-primary transition-colors">
+                  Best Album Covers
+                </Link>
+              </li>
+              <li>
                 <Link href="/search?q=2024" className="text-gray-600 hover:text-primary transition-colors">
                   Latest Releases
                 </Link>

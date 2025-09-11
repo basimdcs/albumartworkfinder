@@ -36,7 +36,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://albumartworkfinder.com/sitemap.xml',
-    host: 'https://albumartworkfinder.com',
+    sitemap: 'https://www.albumartworkfinder.com/sitemap.xml',
+    host: 'https://www.albumartworkfinder.com',
   }
 }

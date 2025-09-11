@@ -177,6 +177,13 @@ const ensureClientSide = () => {
   }
 }
 
+
+// Mobile detection for API call strategy
+const isMobileDevice = (): boolean => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 // Retry-enabled fetch to iTunes API (client-side only)
 const fetchiTunesAPI = async (url: string, retryCount = 0): Promise<iTunesSearchResult> => {
   ensureClientSide()
@@ -185,13 +192,24 @@ const fetchiTunesAPI = async (url: string, retryCount = 0): Promise<iTunesSearch
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
   
   try {
+    // For mobile devices, use different headers to avoid musics:// redirect
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+    }
+    
+    // Use desktop user agent for mobile to avoid iTunes app redirect
+    if (isMobileDevice()) {
+      headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    } else {
+      headers['User-Agent'] = 'AlbumArtworkFinder/1.0'
+    }
+    
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'AlbumArtworkFinder/1.0'
-      },
-      signal: controller.signal
+      headers,
+      signal: controller.signal,
+      mode: 'cors',
+      redirect: 'follow'
     })
     
     clearTimeout(timeoutId)
@@ -221,6 +239,13 @@ const fetchiTunesAPI = async (url: string, retryCount = 0): Promise<iTunesSearch
     clearTimeout(timeoutId)
     
     if (error instanceof Error) {
+      // Check for musics:// protocol redirect error specific to mobile
+      if (error.message.includes('musics://') || 
+          error.message.includes('Cross origin requests are only supported for protocol schemes')) {
+        console.log('iTunes mobile redirect detected, using fallback...')
+        throw new Error('iTunes search is temporarily unavailable on mobile. Please try again later or use desktop.')
+      }
+      
       if (error.name === 'AbortError' || error.message.includes('timeout')) {
         // Retry on timeout if we haven't exceeded max retries
         if (retryCount < MAX_RETRIES) {

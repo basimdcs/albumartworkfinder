@@ -25,16 +25,18 @@ npm run lint        # Run ESLint (Next.js built-in)
 
 ### Core Business Logic
 
-- **`lib/api.ts`** (835 lines): iTunes API integration with sophisticated mobile CORS proxy fallback system
+- **`lib/api.ts`** (619 lines): iTunes API integration with client-side only implementation
 - **`lib/search-tracking.ts`**: User behavior tracking for dynamic SEO sitemap generation
 - **`lib/seo-utils.ts`**: SEO utilities for structured data and meta tags
+- **`lib/seo-slug.ts`**: Enhanced SEO slug generation with international character support
+- **`lib/utils.ts`**: General utility functions
 
 ### Key Architecture Patterns
 
-**Mobile CORS Solution**: The app implements a smart proxy fallback system for mobile browsers:
-- Desktop: Direct iTunes API calls
-- Mobile: Automatic fallback through multiple CORS proxy services
-- Client-side only (no server-side rate limiting)
+**Client-Side API Strategy**: All iTunes API calls are made client-side only:
+- Direct iTunes API calls for all devices (desktop and mobile)
+- No CORS proxy services needed
+- Client-side only implementation prevents server-side rate limiting
 
 **Dynamic SEO System**: 
 - Tracks user searches and album visits
@@ -47,26 +49,50 @@ npm run lint        # Run ESLint (Next.js built-in)
 ```
 app/
 ├── layout.tsx                    # Root layout with GA4 integration
-├── search/page.tsx              # Search page with Suspense boundaries
-├── album/[id]/[...slug]/page.tsx # Dynamic album pages with visit tracking
+├── page.tsx                     # Homepage with search functionality
+├── search/
+│   ├── page.tsx                 # Search page with Suspense boundaries
+│   ├── search-results.tsx       # Search results component
+│   └── search-skeleton.tsx      # Loading skeleton for search
+├── album/[id]/[...slug]/
+│   ├── page.tsx                 # Dynamic album pages with visit tracking
+│   └── layout.tsx               # Album page layout
+├── privacy/page.tsx             # Privacy policy page
+├── terms/page.tsx               # Terms of service page
 ├── sitemap.ts                   # Dynamic sitemap generation
-├── api/track-search/route.ts    # Search/album visit tracking API
-└── admin/search-stats/page.tsx  # Analytics dashboard
+├── robots.ts                    # Dynamic robots.txt
+└── api/track-search/route.ts    # Search/album visit tracking API
 
 lib/
-├── api.ts                       # iTunes API + CORS proxy logic
+├── api.ts                       # iTunes API client-side implementation
 ├── search-tracking.ts           # SEO tracking utilities
-└── seo-utils.ts                # SEO helper functions
+├── seo-utils.ts                 # SEO helper functions
+├── seo-slug.ts                  # Enhanced SEO slug generation
+└── utils.ts                     # General utility functions
 
 components/
-├── ui/                          # Shadcn/ui components (Radix UI)
-└── google-analytics.tsx        # GA4 integration
+├── ui/                          # Shadcn/ui components (40+ components)
+├── album-html-cache.tsx         # Album page HTML caching
+├── album-tracker.tsx            # Album visit tracking
+├── client-only.tsx              # Client-side only wrapper
+├── global-search.tsx            # Global search functionality
+├── google-analytics.tsx         # GA4 integration
+├── high-res-download-button.tsx # High-res download functionality
+├── homepage-html-cache.tsx      # Homepage HTML caching
+├── optimized-image.tsx          # Cost-optimized image component
+├── pwa-provider.tsx             # PWA functionality
+├── theme-provider.tsx           # Theme/dark mode support
+└── [20+ other components]       # Search, download, sharing, etc.
+
+hooks/
+├── use-mobile.tsx               # Mobile detection hook
+└── use-toast.ts                 # Toast notification hook
 ```
 
 ## Development Guidelines
 
 ### Mobile-First Approach
-Always test on mobile devices. The CORS proxy system is critical for mobile functionality - any changes to `lib/api.ts` require mobile testing.
+Always test on mobile devices. iTunes API calls work directly on all devices - any changes to `lib/api.ts` require mobile testing.
 
 ### SEO Considerations
 - All search queries and album visits are automatically tracked for SEO
@@ -113,13 +139,7 @@ NODE_ENV=production               # Environment
 - RSS feed integration for trending content
 
 **CORS Proxy Chain**:
-```typescript
-const CORS_PROXIES = [
-  'https://api.allorigins.win/raw?url=',
-  'https://corsproxy.io/?',
-  'https://cors-anywhere.herokuapp.com/',
-]
-```
+We dont use them 
 
 ## Deployment
 
@@ -136,7 +156,7 @@ Optimized for **Vercel** deployment with:
 - iTunes API calls in server components
 - Missing `'use client'` directives
 
-**Mobile Search Failures**: iTunes API works directly on mobile now - no proxies needed. If issues occur, check network connectivity.
+**Mobile Search Failures**: iTunes API works directly on mobile devices. If issues occur, check network connectivity and ensure client-side execution.
 
 **SEO Sitemap Issues**: Dynamic sitemap generation depends on Redis connection. Check Upstash configuration if sitemap appears empty.
 

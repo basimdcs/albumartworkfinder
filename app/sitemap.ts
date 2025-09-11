@@ -4,7 +4,7 @@ import { getPopularAlbumPages } from '@/lib/search-tracking'
 export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://albumartworkfinder.com'
+  const baseUrl = 'https://www.albumartworkfinder.com'
   const currentDate = new Date()
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -48,6 +48,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
   } catch (error) {
     console.error('Failed to load album pages for sitemap:', error)
+    // Return empty array if tracking data is not available
+    albumArtworkPages = []
   }
 
   const allPages = [
