@@ -91,7 +91,7 @@ export default function AdModal({ isOpen, onClose }: AdModalProps) {
 
           {/* Footer */}
           <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
-            Questions? Contact us at advertise@albumartworkfinder.com
+            Questions? Contact us at support@albumartworkfinder.com
           </p>
         </div>
       </DialogContent>
