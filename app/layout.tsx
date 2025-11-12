@@ -223,13 +223,13 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <div className="flex min-h-screen flex-col">
         <Header />
+        <AdProvider />
           <main className="flex-1">
             {children}
           </main>
         <Footer />
         </div>
         <GoogleAnalytics />
-        <AdProvider />
       </body>
     </html>
   )

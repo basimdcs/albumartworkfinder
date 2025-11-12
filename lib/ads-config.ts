@@ -47,6 +47,5 @@ export const AD_CONFIG = {
   availableSpots: 4,
   price: 99,
   rotationInterval: 10000, // 10 seconds
-  stripeBuyButtonId: "buy_btn_1SSfAMBPUj1Bqh7pymQsdbrn",
-  stripePublishableKey: "pk_live_51J6CrJBPUj1Bqh7pQI8qk7i56wdBeQ8KFxeUoyzAlxzbbgkZIf9DPMaRLkrsekzsAbWs1VVt1om9n1PoTYJ0BkhQ00GyJrwhWy"
+  stripeCheckoutUrl: "https://buy.stripe.com/bJe4gy0NWe2ufDIgUO"
 }

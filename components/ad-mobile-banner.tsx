@@ -11,8 +11,6 @@ interface AdMobileBannerProps {
 export default function AdMobileBanner({ onAdClick }: AdMobileBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
-  const [isScrollingUp, setIsScrollingUp] = useState(true)
-  const [lastScrollY, setLastScrollY] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -22,41 +20,28 @@ export default function AdMobileBanner({ onAdClick }: AdMobileBannerProps) {
     return () => clearInterval(interval)
   }, [])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      setIsScrollingUp(currentScrollY < lastScrollY || currentScrollY < 10)
-      setLastScrollY(currentScrollY)
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [lastScrollY])
-
   if (!isVisible) return null
 
   const currentAd = AD_SPOTS[currentIndex]
 
   return (
-    <div
-      className={`lg:hidden fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
-        isScrollingUp ? "translate-y-0" : "-translate-y-full"
-      }`}
-    >
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+    <div className="lg:hidden border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="relative px-4 py-3">
         <button
           onClick={onAdClick}
-          className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-black/10 transition-colors"
+          className="w-full flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all active:scale-98"
         >
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="text-2xl flex-shrink-0">{currentAd.logo}</div>
-            <div className="text-left min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate">{currentAd.name}</p>
-              <p className="text-xs opacity-90 truncate">{currentAd.tagline}</p>
-            </div>
-            <div className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0">
-              {AD_CONFIG.availableSpots}/{AD_CONFIG.totalSpots} spots
-            </div>
+          <div className="text-3xl flex-shrink-0">{currentAd.logo}</div>
+          <div className="text-left flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
+              {currentAd.name}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+              {currentAd.tagline}
+            </p>
+          </div>
+          <div className="bg-blue-600 text-white px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0">
+            {AD_CONFIG.availableSpots}/{AD_CONFIG.totalSpots}
           </div>
         </button>
 
@@ -66,21 +51,25 @@ export default function AdMobileBanner({ onAdClick }: AdMobileBannerProps) {
             e.stopPropagation()
             setIsVisible(false)
           }}
-          className="absolute top-1 right-1 p-1 hover:bg-white/20 rounded-full transition-colors"
+          className="absolute top-1 right-1 p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
           aria-label="Close advertisement"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
         </button>
-      </div>
 
-      {/* Progress bar */}
-      <div className="h-0.5 bg-white/30">
-        <div
-          className="h-full bg-white transition-all"
-          style={{
-            width: `${((currentIndex + 1) / AD_SPOTS.length) * 100}%`,
-          }}
-        />
+        {/* Progress bar */}
+        <div className="flex justify-center gap-1.5 mt-2">
+          {AD_SPOTS.map((_, index) => (
+            <div
+              key={index}
+              className={`h-1 rounded-full transition-all ${
+                index === currentIndex
+                  ? "bg-blue-600 w-4"
+                  : "bg-gray-300 dark:bg-gray-600 w-1"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )

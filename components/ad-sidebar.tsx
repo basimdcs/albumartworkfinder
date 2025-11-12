@@ -21,40 +21,43 @@ export default function AdSidebar({ onAdClick }: AdSidebarProps) {
   const currentAd = AD_SPOTS[currentIndex]
 
   return (
-    <aside className="hidden lg:block fixed right-4 top-24 w-48 space-y-4 z-40">
-      <div className="bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 p-4 shadow-lg">
+    <div className="hidden lg:block border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-4">
         <button
           onClick={onAdClick}
-          className="w-full text-center space-y-3 hover:opacity-80 transition-opacity"
+          className="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all hover:shadow-lg group"
         >
-          <div className="text-5xl mb-2">{currentAd.logo}</div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              {currentAd.name}
-            </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              {currentAd.tagline}
-            </p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+          <div className="flex items-center gap-4">
+            <div className="text-4xl">{currentAd.logo}</div>
+            <div className="text-left">
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition-colors">
+                {currentAd.name}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {currentAd.tagline}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            {/* Indicator dots */}
+            <div className="flex gap-1.5">
+              {AD_SPOTS.map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-2 w-2 rounded-full transition-all ${
+                    index === currentIndex
+                      ? "bg-blue-600 scale-125"
+                      : "bg-gray-300 dark:bg-gray-600"
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap">
               {AD_CONFIG.availableSpots}/{AD_CONFIG.totalSpots} spots left
-            </p>
+            </div>
           </div>
         </button>
       </div>
-
-      {/* Indicator dots */}
-      <div className="flex justify-center gap-1.5">
-        {AD_SPOTS.map((_, index) => (
-          <div
-            key={index}
-            className={`h-1.5 w-1.5 rounded-full transition-all ${
-              index === currentIndex
-                ? "bg-blue-600 w-4"
-                : "bg-gray-300 dark:bg-gray-600"
-            }`}
-          />
-        ))}
-      </div>
-    </aside>
+    </div>
   )
 }
