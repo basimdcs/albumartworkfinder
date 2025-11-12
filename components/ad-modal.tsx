@@ -2,8 +2,6 @@
 
 import { useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { ExternalLink } from "lucide-react"
 import { AD_CONFIG } from "@/lib/ads-config"
 
 interface AdModalProps {
@@ -13,8 +11,15 @@ interface AdModalProps {
 
 export default function AdModal({ isOpen, onClose }: AdModalProps) {
   useEffect(() => {
-    // Track Google Analytics add_to_cart event when modal opens
+    // Load Stripe Buy Button script and track GA event when modal opens
     if (isOpen) {
+      // Load Stripe script
+      const script = document.createElement('script')
+      script.src = 'https://js.stripe.com/v3/buy-button.js'
+      script.async = true
+      document.body.appendChild(script)
+
+      // Track Google Analytics add_to_cart event
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'add_to_cart', {
           currency: 'USD',
@@ -28,12 +33,15 @@ export default function AdModal({ isOpen, onClose }: AdModalProps) {
           }]
         })
       }
+
+      return () => {
+        // Cleanup script when modal closes
+        if (document.body.contains(script)) {
+          document.body.removeChild(script)
+        }
+      }
     }
   }, [isOpen])
-
-  const handleBuyNow = () => {
-    window.open(AD_CONFIG.stripeCheckoutUrl, '_blank')
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -51,7 +59,7 @@ export default function AdModal({ isOpen, onClose }: AdModalProps) {
           {/* Description */}
           <div className="space-y-3">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Your brand appears in rotating sponsor slots on desktop sidebars and mobile
+              Your brand appears in rotating sponsor slots on desktop banners and mobile
               banners across all AlbumArtworkFinder pages. Sponsors rotate every 10 seconds
               to ensure fair visibility.
             </p>
@@ -73,15 +81,13 @@ export default function AdModal({ isOpen, onClose }: AdModalProps) {
             </div>
           </div>
 
-          {/* Buy Now Button */}
-          <Button
-            onClick={handleBuyNow}
-            size="lg"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
-          >
-            Buy Now
-            <ExternalLink className="ml-2 h-4 w-4" />
-          </Button>
+          {/* Stripe Buy Button */}
+          <div className="flex justify-center">
+            <stripe-buy-button
+              buy-button-id="buy_btn_1SSfAMBPUj1Bqh7pymQsdbrn"
+              publishable-key="pk_live_51J6CrJBPUj1Bqh7pQI8qk7i56wdBeQ8KFxeUoyzAlxzbbgkZIf9DPMaRLkrsekzsAbWs1VVt1om9n1PoTYJ0BkhQ00GyJrwhWy"
+            />
+          </div>
 
           {/* Footer */}
           <p className="text-xs text-gray-500 dark:text-gray-500 text-center">

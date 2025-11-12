@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { AD_SPOTS, AD_CONFIG } from "@/lib/ads-config"
-import { X } from "lucide-react"
 
 interface AdMobileBannerProps {
   onAdClick: () => void
@@ -10,7 +9,6 @@ interface AdMobileBannerProps {
 
 export default function AdMobileBanner({ onAdClick }: AdMobileBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -20,13 +18,11 @@ export default function AdMobileBanner({ onAdClick }: AdMobileBannerProps) {
     return () => clearInterval(interval)
   }, [])
 
-  if (!isVisible) return null
-
   const currentAd = AD_SPOTS[currentIndex]
 
   return (
     <div className="lg:hidden sticky top-0 z-50 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 shadow-md">
-      <div className="relative px-4 py-3">
+      <div className="px-4 py-3">
         <button
           onClick={onAdClick}
           className="w-full flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all active:scale-98"
@@ -43,18 +39,6 @@ export default function AdMobileBanner({ onAdClick }: AdMobileBannerProps) {
           <div className="bg-blue-600 text-white px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0">
             {AD_CONFIG.availableSpots}/{AD_CONFIG.totalSpots}
           </div>
-        </button>
-
-        {/* Close button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            setIsVisible(false)
-          }}
-          className="absolute top-1 right-1 p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-          aria-label="Close advertisement"
-        >
-          <X className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
         </button>
 
         {/* Progress bar */}
