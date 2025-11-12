@@ -21,7 +21,7 @@ export default function AdSidebar({ onAdClick }: AdSidebarProps) {
   const currentAd = AD_SPOTS[currentIndex]
 
   return (
-    <div className="hidden lg:block border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="hidden lg:block sticky top-0 z-50 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 shadow-md">
       <div className="container mx-auto px-4 py-4">
         <button
           onClick={onAdClick}

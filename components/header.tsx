@@ -17,7 +17,7 @@ export default function Header() {
   }, [pathname])
 
   return (
-    <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
+    <header className="border-b border-gray-200 bg-white">
       {/* Top Navigation Bar */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">

@@ -25,7 +25,7 @@ export default function AdMobileBanner({ onAdClick }: AdMobileBannerProps) {
   const currentAd = AD_SPOTS[currentIndex]
 
   return (
-    <div className="lg:hidden border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="lg:hidden sticky top-0 z-50 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 shadow-md">
       <div className="relative px-4 py-3">
         <button
           onClick={onAdClick}
