@@ -5,6 +5,7 @@ import "./globals.css"
 import GoogleAnalytics from "@/components/google-analytics"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import AdProvider from "@/components/ad-provider"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -15,10 +16,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.albumartworkfinder.com'),
   title: {
-    default: 'Album Artwork Finder - Download High-Resolution Album Covers & iTunes Art',
+    default: 'Album Artwork Finder | Download High-Resolution iTunes Album Covers & Art',
     template: '%s | Album Artwork Finder'
   },
-  description: 'Find and download high-resolution album artwork from millions of artists. Free album artwork finder with iTunes integration. Get HD album covers up to 5000x5000px instantly from the iTunes catalog.',
+  description: 'Discover and download high-resolution album artwork with our free Album Artwork Finder. Access iTunes album covers up to 5000×5000px instantly. Best free album artwork finder with iTunes integration for music lovers.',
   keywords: [
     // Primary competitive keywords - enhanced for "album artwork"
     'album artwork',
@@ -64,23 +65,24 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://www.albumartworkfinder.com',
     siteName: 'Album Artwork Finder',
-    title: 'Album Artwork Finder - Download High-Resolution Album Covers & iTunes Art',
-    description: 'Find and download high-resolution album artwork from millions of artists. Free album artwork finder with iTunes integration. Get HD album covers up to 5000x5000px.',
+    title: 'Album Artwork Finder | Download High-Resolution iTunes Album Covers',
+    description: 'Discover and download high-resolution album artwork with our free Album Artwork Finder. Access iTunes album covers up to 5000×5000px instantly. Best iTunes album artwork finder.',
     images: [
       {
         url: '/album-artwork-og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Album Artwork Finder - High-Resolution Album Covers & iTunes Art',
+        alt: 'Album Artwork Finder - Download High-Resolution iTunes Album Covers',
       }
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Album Artwork Finder - Download High-Resolution Album Covers & iTunes Art',
-    description: 'Find and download high-resolution album artwork from millions of artists. Free album artwork finder with iTunes integration.',
+    title: 'Album Artwork Finder | Download High-Resolution iTunes Album Covers',
+    description: 'Discover and download high-resolution album artwork with our free Album Artwork Finder. Access iTunes album covers up to 5000×5000px instantly.',
     images: ['/album-artwork-og-image.jpg'],
     creator: '@albumartworkfinder',
+    site: '@albumartworkfinder',
   },
   robots: {
     index: true,
@@ -227,6 +229,7 @@ export default function RootLayout({
         <Footer />
         </div>
         <GoogleAnalytics />
+        <AdProvider />
       </body>
     </html>
   )
