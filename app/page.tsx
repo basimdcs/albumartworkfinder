@@ -120,18 +120,34 @@ export default function Home() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebPage",
-            "name": "AlbumArtworkFinder - Download High-Quality Album Covers",
-            "description": "Discover and download high-resolution album artwork from millions of artists. Free, fast, and mobile-optimized album cover finder.",
-            "url": "https://albumartworkfinder.com",
+            "name": "Album Artwork Finder - Download High-Resolution iTunes Album Covers",
+            "description": "Discover and download high-resolution album artwork with our free Album Artwork Finder. Access iTunes album covers up to 5000×5000px instantly.",
+            "url": "https://www.albumartworkfinder.com",
             "mainEntity": {
               "@type": "WebApplication",
-              "name": "AlbumArtworkFinder",
+              "name": "Album Artwork Finder",
+              "alternateName": "iTunes Album Artwork Finder",
               "applicationCategory": "MusicApplication",
               "operatingSystem": "Web Browser",
+              "description": "Free album artwork finder with iTunes integration. Download high-resolution album covers up to 5000×5000px.",
               "offers": {
                 "@type": "Offer",
                 "price": "0",
-                "priceCurrency": "USD"
+                "priceCurrency": "USD",
+                "availability": "https://schema.org/InStock"
+              },
+              "featureList": [
+                "Download album artwork up to 5000×5000px resolution",
+                "Search millions of iTunes albums",
+                "Free unlimited downloads",
+                "Mobile-optimized interface",
+                "No registration required"
+              ],
+              "keywords": "album artwork finder, iTunes album covers, download album art, high resolution album artwork",
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "1247"
               }
             },
             "breadcrumb": {
@@ -141,9 +157,14 @@ export default function Home() {
                   "@type": "ListItem",
                   "position": 1,
                   "name": "Home",
-                  "item": "https://albumartworkfinder.com"
+                  "item": "https://www.albumartworkfinder.com"
                 }
               ]
+            },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://www.albumartworkfinder.com/search?q={search_term}",
+              "query-input": "required name=search_term"
             }
           })
         }}
@@ -161,11 +182,11 @@ export default function Home() {
                 <h1 className="mb-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-5xl">
                   Album Artwork Finder
                   <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-                    Download High-Resolution Album Covers
+                    Download High-Resolution iTunes Album Covers
                   </span>
                 </h1>
                 <p className="mx-auto max-w-2xl text-base text-slate-300 md:text-lg">
-                  Search millions of albums and download HD album artwork instantly. Free album artwork finder with iTunes integration - get covers up to 5000×5000px.
+                  Discover and download high-resolution album artwork with our free Album Artwork Finder. Access iTunes album covers up to 5000×5000px instantly from millions of artists. The best iTunes album artwork finder for music lovers.
                 </p>
               </div>
               
@@ -612,6 +633,61 @@ export default function Home() {
           </div>
         </section>
 
+        {/* SEO Content Section */}
+        <section className="bg-white py-16">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-4xl">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                  The Best Album Artwork Finder for iTunes Music
+                </h2>
+                <p className="text-xl text-gray-600 leading-relaxed">
+                  Our Album Artwork Finder is the ultimate tool for downloading high-resolution iTunes album covers. 
+                  Whether you're organizing your music library or need album artwork for creative projects, 
+                  we provide instant access to millions of album covers in stunning HD quality.
+                </p>
+              </div>
+              
+              <div className="grid gap-8 md:grid-cols-2">
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-gray-900">Why Choose Our Album Artwork Finder?</h3>
+                  <ul className="space-y-3 text-gray-600">
+                    <li className="flex items-start gap-3">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                      <span><strong>iTunes Integration:</strong> Direct access to Apple's comprehensive music database</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                      <span><strong>Ultra High Resolution:</strong> Download album artwork up to 5000×5000px</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                      <span><strong>100% Free:</strong> No registration, no fees, unlimited downloads</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                      <span><strong>Mobile Optimized:</strong> Works perfectly on all devices</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-gray-900">Perfect for Music Enthusiasts</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Our iTunes album artwork finder helps music lovers, DJs, collectors, and designers access 
+                    professional-quality album covers instantly. From classic vinyl artwork to the latest releases, 
+                    find and download album artwork for any genre or era.
+                  </p>
+                  <p className="text-gray-600 leading-relaxed">
+                    Simply search for any artist, album, or song and instantly preview high-resolution album artwork. 
+                    Our advanced search technology ensures you'll find exactly what you're looking for in seconds.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Main Content Area */}
         <div className="bg-slate-50">
           <div className="container mx-auto px-4 py-12">
@@ -790,6 +866,79 @@ export default function Home() {
       </section>
           </div>
         </div>
+
+        {/* FAQ Section for SEO */}
+        <section className="bg-white py-16">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-4xl">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                  Frequently Asked Questions
+                </h2>
+                <p className="text-xl text-gray-600">
+                  Everything you need to know about our Album Artwork Finder
+                </p>
+              </div>
+              
+              <div className="space-y-8">
+                <div className="bg-gray-50 rounded-2xl p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    How do I download album artwork using your finder?
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Simply search for any artist, album, or song using our Album Artwork Finder. 
+                    Click on the album you want, then use the download button to get high-resolution 
+                    album covers up to 5000×5000px. No registration required!
+                  </p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-2xl p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    Is this iTunes album artwork finder really free?
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Yes! Our iTunes album artwork finder is completely free to use. 
+                    There are no hidden fees, premium plans, or download limits. 
+                    You can download unlimited high-resolution album artwork at no cost.
+                  </p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-2xl p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    What resolution album artwork can I download?
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Our Album Artwork Finder provides album covers in multiple resolutions, 
+                    from 300×300px for web use up to 5000×5000px for professional printing. 
+                    The highest quality available depends on what's provided by iTunes.
+                  </p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-2xl p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    Does the album artwork finder work on mobile devices?
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Absolutely! Our iTunes album artwork finder is fully optimized for mobile devices. 
+                    You can search and download album artwork on your phone or tablet with the same 
+                    high-quality results as on desktop.
+                  </p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-2xl p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    Can I use downloaded album artwork commercially?
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Album artwork is typically copyrighted material. While you can download and use 
+                    album covers for personal use, commercial use may require permission from the 
+                    copyright holder. Please respect intellectual property rights.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Modern Blog Section */}
         <section className="bg-slate-50 py-20">

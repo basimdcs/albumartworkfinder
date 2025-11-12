@@ -17,8 +17,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${baseUrl}/search`,
       lastModified: currentDate,
-      changeFrequency: 'weekly',
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/top-100-album-covers`,
+      lastModified: currentDate,
+      changeFrequency: 'daily',
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/top-100-single-covers`,
+      lastModified: currentDate,
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/best-album-covers`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/blog/design-trends-in-hip-hop`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/blog/the-art-of-the-mixtape-cover`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.6,
     },
     {
       url: `${baseUrl}/terms`,
@@ -39,13 +75,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const popularAlbums = await getPopularAlbumPages(2000) // Increased to 2000 for better coverage
 
-    albumArtworkPages = popularAlbums.map((album, index) => ({
-      url: `${baseUrl}/album/${album.albumId}/${album.slug}`,
-      lastModified: new Date(album.lastSeen),
-      changeFrequency: 'weekly' as const, // More frequent updates for popular albums
-      // Higher priority for more popular albums (based on position)
-      priority: Math.max(0.5, 0.9 - (index / popularAlbums.length) * 0.4),
-    }))
+    albumArtworkPages = popularAlbums.map((album, index) => {
+      // Ensure valid date format and fallback to current date if invalid
+      let lastModified: Date
+      try {
+        const albumDate = new Date(album.lastSeen)
+        lastModified = isNaN(albumDate.getTime()) ? currentDate : albumDate
+      } catch {
+        lastModified = currentDate
+      }
+
+      return {
+        url: `${baseUrl}/album/${album.albumId}/${album.slug}`,
+        lastModified,
+        changeFrequency: 'weekly' as const, // More frequent updates for popular albums
+        // Higher priority for more popular albums (based on position)
+        priority: Math.max(0.5, 0.9 - (index / popularAlbums.length) * 0.4),
+      }
+    })
   } catch (error) {
     console.error('Failed to load album pages for sitemap:', error)
     // Return empty array if tracking data is not available
